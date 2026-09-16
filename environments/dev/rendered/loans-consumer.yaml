@@ -9,6 +9,7 @@ metadata:
     app.kubernetes.io/name: loans-consumer
     app.kubernetes.io/part-of: sa-platform
 automountServiceAccountToken: false
+
 ---
 # Source: loans-consumer/templates/resources.yaml
 apiVersion: v1
@@ -24,6 +25,7 @@ data:
   LOAN_REQUEST_QUEUE: "loan.requests"
   LOG_LEVEL: "DEBUG"
   WORKER_HEARTBEAT_FILE: "/tmp/worker-ready"
+
 ---
 # Source: loans-consumer/templates/resources.yaml
 apiVersion: apps/v1

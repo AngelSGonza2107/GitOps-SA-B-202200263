@@ -18,6 +18,8 @@ spec:
     matchLabels:
       app.kubernetes.io/name: books-service
       app.kubernetes.io/instance: books-service
+
+
 ---
 # Source: books-service/templates/resources.yaml
 apiVersion: v1
@@ -32,6 +34,7 @@ metadata:
     app.kubernetes.io/part-of: sa-platform
     sa-platform.io/component: "books"
 automountServiceAccountToken: false
+
 ---
 # Source: books-service/templates/resources.yaml
 apiVersion: v1
@@ -48,6 +51,7 @@ metadata:
 data:
   LOG_LEVEL: "warn"
   PORT: "3002"
+
 ---
 # Source: books-service/templates/resources.yaml
 apiVersion: v1
@@ -95,6 +99,7 @@ data:
       }
       sleep(0.2);
     }
+
 ---
 # Source: books-service/templates/resources.yaml
 apiVersion: v1
@@ -118,6 +123,7 @@ spec:
   selector:
     app.kubernetes.io/name: books-service
     app.kubernetes.io/instance: books-service
+
 ---
 # Source: books-service/templates/resources.yaml
 apiVersion: v1
@@ -141,6 +147,7 @@ spec:
   selector:
     app.kubernetes.io/name: books-service
     app.kubernetes.io/instance: books-service
+
 ---
 # Source: books-service/templates/resources.yaml
 apiVersion: v1
@@ -164,6 +171,7 @@ spec:
   selector:
     app.kubernetes.io/name: books-service
     app.kubernetes.io/instance: books-service
+
 ---
 # Source: books-service/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
@@ -236,12 +244,15 @@ spec:
                   - name: tmp
                     emptyDir:
                       sizeLimit: 32Mi
+
 ---
 # Source: books-service/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: books-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
   labels:
     helm.sh/chart: books-service-2.0.0
     app.kubernetes.io/name: books-service

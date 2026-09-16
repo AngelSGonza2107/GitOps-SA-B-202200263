@@ -13,6 +13,7 @@ metadata:
     app.kubernetes.io/part-of: sa-platform
     sa-platform.io/component: "loans"
 automountServiceAccountToken: false
+
 ---
 # Source: loans-service/templates/resources.yaml
 apiVersion: v1
@@ -31,6 +32,7 @@ data:
   CRON_SUMMARY_QUEUE: "cron.summaries"
   LOAN_REQUEST_QUEUE: "loan.requests"
   LOG_LEVEL: "DEBUG"
+
 ---
 # Source: loans-service/templates/resources.yaml
 apiVersion: v1
@@ -78,6 +80,7 @@ data:
       }
       sleep(0.2);
     }
+
 ---
 # Source: loans-service/templates/resources.yaml
 apiVersion: v1
@@ -101,6 +104,7 @@ spec:
   selector:
     app.kubernetes.io/name: loans-service
     app.kubernetes.io/instance: loans-service
+
 ---
 # Source: loans-service/templates/resources.yaml
 apiVersion: v1
@@ -124,6 +128,7 @@ spec:
   selector:
     app.kubernetes.io/name: loans-service
     app.kubernetes.io/instance: loans-service
+
 ---
 # Source: loans-service/templates/resources.yaml
 apiVersion: v1
@@ -147,6 +152,7 @@ spec:
   selector:
     app.kubernetes.io/name: loans-service
     app.kubernetes.io/instance: loans-service
+
 ---
 # Source: loans-service/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
@@ -219,12 +225,15 @@ spec:
                   - name: tmp
                     emptyDir:
                       sizeLimit: 32Mi
+
 ---
 # Source: loans-service/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: loans-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
   labels:
     helm.sh/chart: loans-service-2.0.0
     app.kubernetes.io/name: loans-service
