@@ -24,7 +24,7 @@ spec:
                 operator: In
                 values: [loans, loans-consumer, reviews]
       ports:
-        - { protocol: TCP, port: 8080 }
+        - {protocol: TCP, port: 8080}
 ---
 # Source: platform-config/templates/network-policies.yaml
 apiVersion: networking.k8s.io/v1
@@ -47,10 +47,10 @@ spec:
             matchLabels:
               sa-platform.io/component: gateway
       ports:
-        - { protocol: TCP, port: 3001 }
-        - { protocol: TCP, port: 3002 }
-        - { protocol: TCP, port: 3003 }
-        - { protocol: TCP, port: 3004 }
+        - {protocol: TCP, port: 3001}
+        - {protocol: TCP, port: 3002}
+        - {protocol: TCP, port: 3003}
+        - {protocol: TCP, port: 3004}
 ---
 # Source: platform-config/templates/network-policies.yaml
 apiVersion: networking.k8s.io/v1
@@ -73,11 +73,11 @@ spec:
             matchLabels:
               sa-platform.io/component: canary-analysis
       ports:
-        - { protocol: TCP, port: 8080 }
-        - { protocol: TCP, port: 3001 }
-        - { protocol: TCP, port: 3002 }
-        - { protocol: TCP, port: 3003 }
-        - { protocol: TCP, port: 3004 }
+        - {protocol: TCP, port: 8080}
+        - {protocol: TCP, port: 3001}
+        - {protocol: TCP, port: 3002}
+        - {protocol: TCP, port: 3003}
+        - {protocol: TCP, port: 3004}
 ---
 # Source: platform-config/templates/network-policies.yaml
 apiVersion: networking.k8s.io/v1
@@ -98,8 +98,8 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: kube-system
       ports:
-        - { protocol: UDP, port: 53 }
-        - { protocol: TCP, port: 53 }
+        - {protocol: UDP, port: 53}
+        - {protocol: TCP, port: 53}
     - to:
         - podSelector:
             matchExpressions:
@@ -107,11 +107,11 @@ spec:
                 operator: In
                 values: [gateway, auth, books, loans, reviews]
       ports:
-        - { protocol: TCP, port: 8080 }
-        - { protocol: TCP, port: 3001 }
-        - { protocol: TCP, port: 3002 }
-        - { protocol: TCP, port: 3003 }
-        - { protocol: TCP, port: 3004 }
+        - {protocol: TCP, port: 8080}
+        - {protocol: TCP, port: 3001}
+        - {protocol: TCP, port: 3002}
+        - {protocol: TCP, port: 3003}
+        - {protocol: TCP, port: 3004}
 ---
 # Source: platform-config/templates/cronjobs.yaml
 apiVersion: v1
@@ -159,22 +159,22 @@ spec:
           automountServiceAccountToken: false
           securityContext:
             runAsNonRoot: true
-            seccompProfile: { type: RuntimeDefault }
+            seccompProfile: {type: RuntimeDefault}
           containers:
             - name: insert-execution
-              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v0.0.0-bootstrap.1"
+              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v8.0.1"
               imagePullPolicy: IfNotPresent
               command: ["python", "-m", "jobs.insert_execution"]
               envFrom:
-                - configMapRef: { name: sa-cronjobs-config }
-                - secretRef: { name: sa-cron-insert-credentials }
+                - configMapRef: {name: sa-cronjobs-config}
+                - secretRef: {name: sa-cron-insert-credentials}
               securityContext:
                 runAsNonRoot: true
                 runAsUser: 10001
                 runAsGroup: 10001
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true
-                capabilities: { drop: ["ALL"] }
+                capabilities: {drop: ["ALL"]}
               resources:
                 limits:
                   cpu: 300m
@@ -183,10 +183,10 @@ spec:
                   cpu: 75m
                   memory: 96Mi
               volumeMounts:
-                - { name: tmp, mountPath: /tmp }
+                - {name: tmp, mountPath: /tmp}
           volumes:
             - name: tmp
-              emptyDir: { sizeLimit: 32Mi }
+              emptyDir: {sizeLimit: 32Mi}
 ---
 # Source: platform-config/templates/cronjobs.yaml
 apiVersion: batch/v1
@@ -220,22 +220,22 @@ spec:
           automountServiceAccountToken: false
           securityContext:
             runAsNonRoot: true
-            seccompProfile: { type: RuntimeDefault }
+            seccompProfile: {type: RuntimeDefault}
           containers:
             - name: publish-summary
-              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v0.0.0-bootstrap.1"
+              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v8.0.1"
               imagePullPolicy: IfNotPresent
               command: ["python", "-m", "jobs.publish_summary"]
               envFrom:
-                - configMapRef: { name: sa-cronjobs-config }
-                - secretRef: { name: sa-cron-summary-credentials }
+                - configMapRef: {name: sa-cronjobs-config}
+                - secretRef: {name: sa-cron-summary-credentials}
               securityContext:
                 runAsNonRoot: true
                 runAsUser: 10001
                 runAsGroup: 10001
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true
-                capabilities: { drop: ["ALL"] }
+                capabilities: {drop: ["ALL"]}
               resources:
                 limits:
                   cpu: 300m
@@ -244,10 +244,10 @@ spec:
                   cpu: 75m
                   memory: 96Mi
               volumeMounts:
-                - { name: tmp, mountPath: /tmp }
+                - {name: tmp, mountPath: /tmp}
           volumes:
             - name: tmp
-              emptyDir: { sizeLimit: 32Mi }
+              emptyDir: {sizeLimit: 32Mi}
 ---
 # Source: platform-config/templates/policies.yaml
 apiVersion: kyverno.io/v1
