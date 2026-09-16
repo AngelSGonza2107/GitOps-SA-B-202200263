@@ -1,0 +1,411 @@
+# Generado desde P8/charts/platform-config. No editar este archivo manualmente.
+---
+# Source: platform-config/templates/network-policies.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway-ingress-authorized
+  namespace: sa-p8-dev
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+spec:
+  podSelector:
+    matchLabels:
+      sa-platform.io/component: gateway
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              sa-platform.io/component: ingress-controller
+        - podSelector:
+            matchExpressions:
+              - key: sa-platform.io/component
+                operator: In
+                values: [loans, loans-consumer, reviews]
+      ports:
+        - { protocol: TCP, port: 8080 }
+---
+# Source: platform-config/templates/network-policies.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: services-ingress-from-gateway
+  namespace: sa-p8-dev
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+spec:
+  podSelector:
+    matchExpressions:
+      - key: sa-platform.io/component
+        operator: In
+        values: [auth, books, loans, reviews]
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              sa-platform.io/component: gateway
+      ports:
+        - { protocol: TCP, port: 3001 }
+        - { protocol: TCP, port: 3002 }
+        - { protocol: TCP, port: 3003 }
+        - { protocol: TCP, port: 3004 }
+---
+# Source: platform-config/templates/network-policies.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-canary-analysis-ingress
+  namespace: sa-p8-dev
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+spec:
+  podSelector:
+    matchExpressions:
+      - key: sa-platform.io/component
+        operator: In
+        values: [gateway, auth, books, loans, reviews]
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              sa-platform.io/component: canary-analysis
+      ports:
+        - { protocol: TCP, port: 8080 }
+        - { protocol: TCP, port: 3001 }
+        - { protocol: TCP, port: 3002 }
+        - { protocol: TCP, port: 3003 }
+        - { protocol: TCP, port: 3004 }
+---
+# Source: platform-config/templates/network-policies.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-canary-analysis-egress
+  namespace: sa-p8-dev
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+spec:
+  podSelector:
+    matchLabels:
+      sa-platform.io/component: canary-analysis
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+    - to:
+        - podSelector:
+            matchExpressions:
+              - key: sa-platform.io/component
+                operator: In
+                values: [gateway, auth, books, loans, reviews]
+      ports:
+        - { protocol: TCP, port: 8080 }
+        - { protocol: TCP, port: 3001 }
+        - { protocol: TCP, port: 3002 }
+        - { protocol: TCP, port: 3003 }
+        - { protocol: TCP, port: 3004 }
+---
+# Source: platform-config/templates/cronjobs.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sa-cronjobs-config
+  namespace: sa-p8-dev
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+data:
+  STUDENT_ID: "202200263"
+  TIME_ZONE: America/Guatemala
+  LOG_LEVEL: "INFO"
+  CRON_SUMMARY_QUEUE: cron.summaries
+---
+# Source: platform-config/templates/cronjobs.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: insert-execution
+  namespace: sa-p8-dev
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: insert-execution
+spec:
+  schedule: "*/2 * * * *"
+  timeZone: America/Guatemala
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/part-of: sa-platform
+            sa-platform.io/component: insert-execution
+            sa-platform.io/database-access: "true"
+            sa-platform.io/broker-access: "false"
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: insert-execution
+              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v0.0.0-bootstrap.1"
+              imagePullPolicy: IfNotPresent
+              command: ["python", "-m", "jobs.insert_execution"]
+              envFrom:
+                - configMapRef: { name: sa-cronjobs-config }
+                - secretRef: { name: sa-cron-insert-credentials }
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: 10001
+                runAsGroup: 10001
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 192Mi
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+              volumeMounts:
+                - { name: tmp, mountPath: /tmp }
+          volumes:
+            - name: tmp
+              emptyDir: { sizeLimit: 32Mi }
+---
+# Source: platform-config/templates/cronjobs.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: publish-summary
+  namespace: sa-p8-dev
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: publish-summary
+spec:
+  schedule: "*/10 * * * *"
+  timeZone: America/Guatemala
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/part-of: sa-platform
+            sa-platform.io/component: publish-summary
+            sa-platform.io/database-access: "true"
+            sa-platform.io/broker-access: "true"
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: publish-summary
+              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v0.0.0-bootstrap.1"
+              imagePullPolicy: IfNotPresent
+              command: ["python", "-m", "jobs.publish_summary"]
+              envFrom:
+                - configMapRef: { name: sa-cronjobs-config }
+                - secretRef: { name: sa-cron-summary-credentials }
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: 10001
+                runAsGroup: 10001
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 192Mi
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+              volumeMounts:
+                - { name: tmp, mountPath: /tmp }
+          volumes:
+            - name: tmp
+              emptyDir: { sizeLimit: 32Mi }
+---
+# Source: platform-config/templates/external-secrets.yaml
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: sa-platform-infra-credentials
+  namespace: sa-p8-dev
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: p8-gcp-secret-manager
+  target:
+    name: sa-platform-infra-credentials
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  dataFrom:
+    - extract:
+        key: p8-infra-credentials-dev
+---
+# Source: platform-config/templates/external-secrets.yaml
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: sa-auth-credentials
+  namespace: sa-p8-dev
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: p8-gcp-secret-manager
+  target:
+    name: sa-auth-credentials
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  dataFrom:
+    - extract:
+        key: p8-auth-credentials-dev
+---
+# Source: platform-config/templates/external-secrets.yaml
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: sa-books-credentials
+  namespace: sa-p8-dev
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: p8-gcp-secret-manager
+  target:
+    name: sa-books-credentials
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  dataFrom:
+    - extract:
+        key: p8-books-credentials-dev
+---
+# Source: platform-config/templates/external-secrets.yaml
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: sa-loans-credentials
+  namespace: sa-p8-dev
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: p8-gcp-secret-manager
+  target:
+    name: sa-loans-credentials
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  dataFrom:
+    - extract:
+        key: p8-loans-credentials-dev
+---
+# Source: platform-config/templates/external-secrets.yaml
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: sa-reviews-credentials
+  namespace: sa-p8-dev
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: p8-gcp-secret-manager
+  target:
+    name: sa-reviews-credentials
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  dataFrom:
+    - extract:
+        key: p8-reviews-credentials-dev
+---
+# Source: platform-config/templates/external-secrets.yaml
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: sa-cron-insert-credentials
+  namespace: sa-p8-dev
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: p8-gcp-secret-manager
+  target:
+    name: sa-cron-insert-credentials
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  dataFrom:
+    - extract:
+        key: p8-cron-insert-credentials-dev
+---
+# Source: platform-config/templates/external-secrets.yaml
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: sa-cron-summary-credentials
+  namespace: sa-p8-dev
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: p8-gcp-secret-manager
+  target:
+    name: sa-cron-summary-credentials
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  dataFrom:
+    - extract:
+        key: p8-cron-summary-credentials-dev

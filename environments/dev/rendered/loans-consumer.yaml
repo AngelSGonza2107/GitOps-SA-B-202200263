@@ -1,0 +1,120 @@
+# Generado desde P8/charts/loans-consumer. No editar este archivo manualmente.
+---
+# Source: loans-consumer/templates/resources.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: loans-consumer
+  labels:
+    app.kubernetes.io/name: loans-consumer
+    app.kubernetes.io/part-of: sa-platform
+automountServiceAccountToken: false
+---
+# Source: loans-consumer/templates/resources.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loans-consumer-config
+  labels:
+    app.kubernetes.io/name: loans-consumer
+    app.kubernetes.io/part-of: sa-platform
+data:
+  BOOKS_SERVICE_URL: "http://api-gateway:8080"
+  CRON_SUMMARY_QUEUE: "cron.summaries"
+  LOAN_REQUEST_QUEUE: "loan.requests"
+  LOG_LEVEL: "DEBUG"
+  WORKER_HEARTBEAT_FILE: "/tmp/worker-ready"
+---
+# Source: loans-consumer/templates/resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loans-consumer
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/name: loans-consumer
+    app.kubernetes.io/part-of: sa-platform
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: loans-consumer
+  template:
+    metadata:
+      annotations:
+        checksum/config: "f86e6433caab839f57c287811b387a464f52f5d63dd0c13b2d54e6a7b5192294"
+      labels:
+        app.kubernetes.io/name: loans-consumer
+        app.kubernetes.io/part-of: sa-platform
+        sa-platform.io/component: loans-consumer
+        sa-platform.io/database-access: "true"
+        sa-platform.io/broker-access: "true"
+    spec:
+      serviceAccountName: loans-consumer
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: loans-consumer
+          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/loans-service:v0.0.0-bootstrap.1"
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "app.consumer"]
+          envFrom:
+            - configMapRef:
+                name: loans-consumer-config
+            - secretRef:
+                name: sa-loans-credentials
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            limits:
+              cpu: 300m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 96Mi
+          livenessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import os,time; p='/tmp/worker-ready'; assert os.path.exists(p) and time.time()-os.path.getmtime(p)<40"
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import os,time; p='/tmp/worker-ready'; assert os.path.exists(p) and time.time()-os.path.getmtime(p)<20"
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          startupProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import os; assert os.path.exists('/tmp/worker-ready')"
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi

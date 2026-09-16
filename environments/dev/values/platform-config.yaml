@@ -1,0 +1,8 @@
+projectId: practicas-sa-2s2026
+cluster:
+  name: sa-p8-gitops
+  location: us-central1-a
+cronjobs:
+  image:
+    repository: us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs
+    tag: "v0.0.0-bootstrap.1"

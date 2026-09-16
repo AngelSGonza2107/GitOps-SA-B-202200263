@@ -1,0 +1,7 @@
+postgresql:
+  enabled: true
+rabbitmq:
+  enabled: true
+ingress-nginx:
+  enabled: false
+
