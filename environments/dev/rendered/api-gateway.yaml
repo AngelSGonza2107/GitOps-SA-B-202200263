@@ -13,6 +13,7 @@ metadata:
     app.kubernetes.io/part-of: sa-platform
     sa-platform.io/component: "gateway"
 automountServiceAccountToken: false
+
 ---
 # Source: api-gateway/templates/resources.yaml
 apiVersion: v1
@@ -33,6 +34,7 @@ data:
   LOG_LEVEL: "debug"
   PORT: "8080"
   REVIEWS_SERVICE_URL: "http://reviews-service:3004"
+
 ---
 # Source: api-gateway/templates/resources.yaml
 apiVersion: v1
@@ -82,6 +84,7 @@ data:
       }
       sleep(0.2);
     }
+
 ---
 # Source: api-gateway/templates/resources.yaml
 apiVersion: v1
@@ -105,6 +108,7 @@ spec:
   selector:
     app.kubernetes.io/name: api-gateway
     app.kubernetes.io/instance: api-gateway
+
 ---
 # Source: api-gateway/templates/resources.yaml
 apiVersion: v1
@@ -128,6 +132,7 @@ spec:
   selector:
     app.kubernetes.io/name: api-gateway
     app.kubernetes.io/instance: api-gateway
+
 ---
 # Source: api-gateway/templates/resources.yaml
 apiVersion: v1
@@ -151,6 +156,7 @@ spec:
   selector:
     app.kubernetes.io/name: api-gateway
     app.kubernetes.io/instance: api-gateway
+
 ---
 # Source: api-gateway/templates/resources.yaml
 apiVersion: networking.k8s.io/v1
@@ -178,6 +184,8 @@ spec:
                 name: api-gateway
                 port:
                   number: 8080
+
+
 ---
 # Source: api-gateway/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
@@ -250,12 +258,15 @@ spec:
                   - name: tmp
                     emptyDir:
                       sizeLimit: 32Mi
+
 ---
 # Source: api-gateway/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: api-gateway
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
   labels:
     helm.sh/chart: api-gateway-2.0.0
     app.kubernetes.io/name: api-gateway

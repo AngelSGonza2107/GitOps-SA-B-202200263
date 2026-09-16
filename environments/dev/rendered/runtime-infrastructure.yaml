@@ -29,6 +29,7 @@ spec:
   ingress:
     - ports:
         - port: 5432
+
 ---
 # Source: runtime-infrastructure/charts/postgresql/templates/primary/pdb.yaml
 apiVersion: policy/v1
@@ -52,6 +53,7 @@ spec:
       app.kubernetes.io/instance: runtime-infrastructure
       app.kubernetes.io/name: postgresql
       app.kubernetes.io/component: primary
+
 ---
 # Source: runtime-infrastructure/charts/rabbitmq/templates/pdb.yaml
 apiVersion: policy/v1
@@ -73,6 +75,7 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: runtime-infrastructure
       app.kubernetes.io/name: rabbitmq
+
 ---
 # Source: runtime-infrastructure/charts/postgresql/templates/serviceaccount.yaml
 apiVersion: v1
@@ -89,6 +92,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 automountServiceAccountToken: false
+
 ---
 # Source: runtime-infrastructure/charts/rabbitmq/templates/serviceaccount.yaml
 apiVersion: v1
@@ -107,6 +111,8 @@ metadata:
 automountServiceAccountToken: false
 secrets:
   - name: sa-platform-infra-credentials
+
+
 ---
 # Source: runtime-infrastructure/charts/rabbitmq/templates/config-secret.yaml
 apiVersion: v1
@@ -126,6 +132,7 @@ type: Opaque
 data:
   rabbitmq.conf: |-
     IyMgVXNlcm5hbWUgYW5kIHBhc3N3b3JkCmRlZmF1bHRfdXNlciA9IHNhX3BsYXRmb3JtCgojIHF1ZXVlIGxlYWRlciBsb2NhdG9yCnF1ZXVlX2xlYWRlcl9sb2NhdG9yID0gYmFsYW5jZWQKIyBlbmFibGUgbG9vcGJhY2sgdXNlcgpsb29wYmFja191c2Vycy5zYV9wbGF0Zm9ybSA9IGZhbHNlCiNkZWZhdWx0X3Zob3N0ID0gc2EtcDgtZGV2LXZob3N0CiNkaXNrX2ZyZWVfbGltaXQuYWJzb2x1dGUgPSA1ME1CCiMjIFByb21ldGhldXMgbWV0cmljcwojIwpwcm9tZXRoZXVzLnRjcC5wb3J0ID0gOTQxOQojIyBUQ1AgTGlzdGVuIE9wdGlvbnMKIyMKdGNwX2xpc3Rlbl9vcHRpb25zLmJhY2tsb2cgPSAxMjgKdGNwX2xpc3Rlbl9vcHRpb25zLm5vZGVsYXkgPSB0cnVlCnRjcF9saXN0ZW5fb3B0aW9ucy5saW5nZXIub24gICAgICA9IHRydWUKdGNwX2xpc3Rlbl9vcHRpb25zLmxpbmdlci50aW1lb3V0ID0gMAp0Y3BfbGlzdGVuX29wdGlvbnMua2VlcGFsaXZlID0gZmFsc2U=
+
 ---
 # Source: runtime-infrastructure/charts/postgresql/templates/primary/initialization-configmap.yaml
 apiVersion: v1
@@ -151,6 +158,7 @@ data:
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'reviews_db')\gexec
     SELECT 'CREATE DATABASE operations_db OWNER sa_platform'
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'operations_db')\gexec
+
 ---
 # Source: runtime-infrastructure/charts/rabbitmq/templates/role.yaml
 kind: Role
@@ -173,6 +181,7 @@ rules:
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["create"]
+
 ---
 # Source: runtime-infrastructure/charts/rabbitmq/templates/rolebinding.yaml
 kind: RoleBinding
@@ -195,6 +204,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: sa-rabbitmq-endpoint-reader
+
 ---
 # Source: runtime-infrastructure/charts/postgresql/templates/primary/svc-headless.yaml
 apiVersion: v1
@@ -226,6 +236,7 @@ spec:
     app.kubernetes.io/instance: runtime-infrastructure
     app.kubernetes.io/name: postgresql
     app.kubernetes.io/component: primary
+
 ---
 # Source: runtime-infrastructure/charts/postgresql/templates/primary/svc.yaml
 apiVersion: v1
@@ -253,6 +264,7 @@ spec:
     app.kubernetes.io/instance: runtime-infrastructure
     app.kubernetes.io/name: postgresql
     app.kubernetes.io/component: primary
+
 ---
 # Source: runtime-infrastructure/charts/rabbitmq/templates/svc-headless.yaml
 apiVersion: v1
@@ -288,6 +300,7 @@ spec:
     app.kubernetes.io/name: rabbitmq
   publishNotReadyAddresses: true
   trafficDistribution: PreferClose
+
 ---
 # Source: runtime-infrastructure/charts/rabbitmq/templates/svc.yaml
 apiVersion: v1
@@ -326,6 +339,7 @@ spec:
   selector:
     app.kubernetes.io/instance: runtime-infrastructure
     app.kubernetes.io/name: rabbitmq
+
 ---
 # Source: runtime-infrastructure/charts/postgresql/templates/primary/statefulset.yaml
 apiVersion: apps/v1
@@ -526,6 +540,7 @@ spec:
           requests:
             storage: "2Gi"
         storageClassName: standard-rwo
+
 ---
 # Source: runtime-infrastructure/charts/rabbitmq/templates/statefulset.yaml
 apiVersion: apps/v1

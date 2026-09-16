@@ -13,6 +13,7 @@ metadata:
     app.kubernetes.io/part-of: sa-platform
     sa-platform.io/component: "reviews"
 automountServiceAccountToken: false
+
 ---
 # Source: reviews-service/templates/resources.yaml
 apiVersion: v1
@@ -29,6 +30,7 @@ metadata:
 data:
   BOOKS_SERVICE_URL: "http://api-gateway:8080"
   LOG_LEVEL: "DEBUG"
+
 ---
 # Source: reviews-service/templates/resources.yaml
 apiVersion: v1
@@ -76,6 +78,7 @@ data:
       }
       sleep(0.2);
     }
+
 ---
 # Source: reviews-service/templates/resources.yaml
 apiVersion: v1
@@ -99,6 +102,7 @@ spec:
   selector:
     app.kubernetes.io/name: reviews-service
     app.kubernetes.io/instance: reviews-service
+
 ---
 # Source: reviews-service/templates/resources.yaml
 apiVersion: v1
@@ -122,6 +126,7 @@ spec:
   selector:
     app.kubernetes.io/name: reviews-service
     app.kubernetes.io/instance: reviews-service
+
 ---
 # Source: reviews-service/templates/resources.yaml
 apiVersion: v1
@@ -145,6 +150,7 @@ spec:
   selector:
     app.kubernetes.io/name: reviews-service
     app.kubernetes.io/instance: reviews-service
+
 ---
 # Source: reviews-service/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
@@ -217,12 +223,15 @@ spec:
                   - name: tmp
                     emptyDir:
                       sizeLimit: 32Mi
+
 ---
 # Source: reviews-service/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: reviews-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
   labels:
     helm.sh/chart: reviews-service-2.0.0
     app.kubernetes.io/name: reviews-service

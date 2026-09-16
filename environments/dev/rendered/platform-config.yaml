@@ -25,6 +25,7 @@ spec:
                 values: [loans, loans-consumer, reviews]
       ports:
         - { protocol: TCP, port: 8080 }
+
 ---
 # Source: platform-config/templates/network-policies.yaml
 apiVersion: networking.k8s.io/v1
@@ -51,6 +52,7 @@ spec:
         - { protocol: TCP, port: 3002 }
         - { protocol: TCP, port: 3003 }
         - { protocol: TCP, port: 3004 }
+
 ---
 # Source: platform-config/templates/network-policies.yaml
 apiVersion: networking.k8s.io/v1
@@ -78,6 +80,7 @@ spec:
         - { protocol: TCP, port: 3002 }
         - { protocol: TCP, port: 3003 }
         - { protocol: TCP, port: 3004 }
+
 ---
 # Source: platform-config/templates/network-policies.yaml
 apiVersion: networking.k8s.io/v1
@@ -112,6 +115,7 @@ spec:
         - { protocol: TCP, port: 3002 }
         - { protocol: TCP, port: 3003 }
         - { protocol: TCP, port: 3004 }
+
 ---
 # Source: platform-config/templates/cronjobs.yaml
 apiVersion: v1
@@ -126,6 +130,7 @@ data:
   TIME_ZONE: America/Guatemala
   LOG_LEVEL: "INFO"
   CRON_SUMMARY_QUEUE: cron.summaries
+
 ---
 # Source: platform-config/templates/cronjobs.yaml
 apiVersion: batch/v1
@@ -187,6 +192,7 @@ spec:
           volumes:
             - name: tmp
               emptyDir: { sizeLimit: 32Mi }
+
 ---
 # Source: platform-config/templates/cronjobs.yaml
 apiVersion: batch/v1
@@ -248,6 +254,7 @@ spec:
           volumes:
             - name: tmp
               emptyDir: { sizeLimit: 32Mi }
+
 ---
 # Source: platform-config/templates/external-secrets.yaml
 apiVersion: external-secrets.io/v1
@@ -271,6 +278,7 @@ spec:
   dataFrom:
     - extract:
         key: p8-infra-credentials-dev
+
 ---
 # Source: platform-config/templates/external-secrets.yaml
 apiVersion: external-secrets.io/v1
@@ -294,6 +302,7 @@ spec:
   dataFrom:
     - extract:
         key: p8-auth-credentials-dev
+
 ---
 # Source: platform-config/templates/external-secrets.yaml
 apiVersion: external-secrets.io/v1
@@ -317,6 +326,7 @@ spec:
   dataFrom:
     - extract:
         key: p8-books-credentials-dev
+
 ---
 # Source: platform-config/templates/external-secrets.yaml
 apiVersion: external-secrets.io/v1
@@ -340,6 +350,7 @@ spec:
   dataFrom:
     - extract:
         key: p8-loans-credentials-dev
+
 ---
 # Source: platform-config/templates/external-secrets.yaml
 apiVersion: external-secrets.io/v1
@@ -363,6 +374,7 @@ spec:
   dataFrom:
     - extract:
         key: p8-reviews-credentials-dev
+
 ---
 # Source: platform-config/templates/external-secrets.yaml
 apiVersion: external-secrets.io/v1
@@ -386,6 +398,7 @@ spec:
   dataFrom:
     - extract:
         key: p8-cron-insert-credentials-dev
+
 ---
 # Source: platform-config/templates/external-secrets.yaml
 apiVersion: external-secrets.io/v1
