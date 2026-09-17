@@ -183,6 +183,8 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: api-gateway
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
   labels:
     helm.sh/chart: api-gateway-2.0.0
     app.kubernetes.io/name: api-gateway
