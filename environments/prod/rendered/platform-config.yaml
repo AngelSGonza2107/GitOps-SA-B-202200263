@@ -378,7 +378,6 @@ spec:
       verifyImages:
         - imageReferences:
             - "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/*"
-          cosignOCI11: true
           required: true
           mutateDigest: true
           verifyDigest: true
