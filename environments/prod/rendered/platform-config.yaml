@@ -383,7 +383,7 @@ spec:
           verifyDigest: true
           failureAction: Enforce
           imageRegistryCredentials:
-            helpers: [google]
+            providers: [google]
           attestors:
             - entries:
                 - keyless:
