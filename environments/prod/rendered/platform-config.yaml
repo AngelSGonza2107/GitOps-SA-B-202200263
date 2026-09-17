@@ -360,6 +360,7 @@ metadata:
   name: p8-verify-cosign-signatures
   annotations:
     policies.kyverno.io/title: Verificar firmas Cosign de P8
+    pod-policies.kyverno.io/autogen-controllers: none
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   background: false
