@@ -188,7 +188,7 @@ metadata:
 spec:
   metrics:
     - name: canary-check
-      failureLimit: 1
+      failureLimit: 0
       # kind: Job; Argo Rollouts materializa este proveedor en cada paso canary.
       provider:
         job:
