@@ -189,7 +189,7 @@ metadata:
     sa-platform.io/component: "loans"
 spec:
   metrics:
-    - name: smoke-integration-and-load
+    - name: canary-check
       failureLimit: 1
       # kind: Job; Argo Rollouts materializa este proveedor en cada paso canary.
       provider:
