@@ -5,4 +5,4 @@ cluster:
 cronjobs:
   image:
     repository: us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs
-    tag: "v8.0.7"
+    tag: "v8.0.8-faulty.1"
