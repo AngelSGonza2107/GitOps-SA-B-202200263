@@ -166,8 +166,8 @@ metadata:
     sa-platform.io/component: "reviews"
 spec:
   metrics:
-    - name: smoke-integration-and-load
-      failureLimit: 1
+    - name: canary-check
+      failureLimit: 0
       # kind: Job; Argo Rollouts materializa este proveedor en cada paso canary.
       provider:
         job:
