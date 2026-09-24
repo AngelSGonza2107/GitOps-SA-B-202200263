@@ -1,0 +1,30 @@
+environment: prod
+namespace: sa-p9
+projectId: practicas-sa-2s2026
+cluster:
+  name: sa-p9-dr
+  location: us-central1-a
+secretStore:
+  create: true
+  name: p9-gcp-secret-manager
+  serviceAccount:
+    name: external-secrets
+    namespace: external-secrets
+externalSecrets:
+  refreshInterval: 15m
+  items:
+    - { name: sa-platform-infra-credentials, remoteKey: p9-infra-credentials-prod }
+    - { name: sa-auth-credentials, remoteKey: p9-auth-credentials-prod }
+    - { name: sa-books-credentials, remoteKey: p9-books-credentials-prod }
+    - { name: sa-loans-credentials, remoteKey: p9-loans-credentials-prod }
+    - { name: sa-reviews-credentials, remoteKey: p9-reviews-credentials-prod }
+    - { name: sa-cron-insert-credentials, remoteKey: p9-cron-insert-credentials-prod }
+    - { name: sa-cron-summary-credentials, remoteKey: p9-cron-summary-credentials-prod }
+cronjobs:
+  image:
+    repository: us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs
+    tag: "v8.0.9"
+policies:
+  enabled: true
+  namespaces: [sa-p9]
+

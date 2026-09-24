@@ -1,4 +1,4 @@
-# Estado declarativo GitOps - Práctica 8
+# Estado declarativo GitOps - Prácticas 8 y 9
 
 Este repositorio es la única fuente de verdad que ArgoCD observa para desplegar la plataforma. No contiene código de los microservicios ni secretos en texto plano.
 
@@ -13,9 +13,18 @@ environments/
   prod/
     values/
     rendered/
+  p9/
+    governance/                 Namespace, cuota y límites reconstruibles
+    values/                     Release estable y referencias de P9
+    rendered/                   Plataforma recuperable consumida por ArgoCD
+applications/
+  p9/                           Aplicaciones hijas del app-of-apps `sa-p9-root`
 ```
 
 Los charts fuente y el renderizador viven en `P8` del repositorio `Practicas-SA-B-202200263`. El workflow de release modifica exclusivamente los tags de imagen en los valores y manifiestos de producción, y abre un Pull Request. ArgoCD nunca lee una rama de código ni recibe instrucciones desde GitHub Actions. `loans-consumer` reutiliza la imagen firmada de `loans-service`, porque es el worker del mismo microservicio y no una copia del código. `runtime-infrastructure` declara PostgreSQL, RabbitMQ e ingress-nginx para que el clúster P8 nazca vacío y todo el runtime llegue desde GitOps.
+
+P9 agrega el patrón app-of-apps. Terraform instala únicamente ArgoCD y registra `sa-p9-root`; la raíz lee `applications/p9`, instala los controladores y después
+reconcilia `environments/p9/rendered`. Los respaldos se escriben en GCS mediante Velero y los secretos vuelven desde Google Secret Manager mediante External Secrets, ambos externos al clúster que se destruye.
 
 ## Reglas de operación
 
