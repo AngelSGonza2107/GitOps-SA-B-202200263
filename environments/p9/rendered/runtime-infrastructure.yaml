@@ -1358,7 +1358,7 @@ webhooks:
           - UPDATE
         resources:
           - ingresses
-    failurePolicy: Fail
+    failurePolicy: Ignore
     sideEffects: None
     admissionReviewVersions:
       - v1
@@ -1610,7 +1610,7 @@ spec:
             - --namespace=$(POD_NAMESPACE)
             - --patch-mutating=false
             - --secret-name=runtime-infrastructure-ingress-nginx-admission
-            - --patch-failure-policy=Fail
+            - --patch-failure-policy=Ignore
           env:
             - name: POD_NAMESPACE
               valueFrom:

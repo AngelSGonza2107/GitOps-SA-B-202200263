@@ -16,12 +16,18 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: sa-p9
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      name: runtime-infrastructure-ingress-nginx-admission
+      jqPathExpressions:
+        - .webhooks[]?.clientConfig.caBundle
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
       allowEmpty: false
-    syncOptions: [CreateNamespace=true, ServerSideApply=true]
+    syncOptions: [CreateNamespace=true, ServerSideApply=true, RespectIgnoreDifferences=true]
     retry:
       limit: 10
       backoff: { duration: 15s, factor: 2, maxDuration: 5m }
