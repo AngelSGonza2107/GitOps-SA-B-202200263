@@ -1,0 +1,4 @@
+image:
+  repository: us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/auth-service
+  tag: "v8.0.9"
+

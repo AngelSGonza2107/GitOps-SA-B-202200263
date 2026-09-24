@@ -1,0 +1,442 @@
+# Generado desde P8/charts/api-gateway para P9. No editar manualmente.
+---
+# Source: api-gateway/templates/resources.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-gateway
+  labels:
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: "gateway"
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api-gateway
+      app.kubernetes.io/instance: api-gateway
+
+---
+# Source: api-gateway/templates/resources.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: api-gateway
+  labels:
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: "gateway"
+automountServiceAccountToken: false
+
+---
+# Source: api-gateway/templates/resources.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-config
+  labels:
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: "gateway"
+data:
+  AUTH_SERVICE_URL: "http://auth-service:3001"
+  BOOKS_SERVICE_URL: "http://books-service:3002"
+  LOANS_SERVICE_URL: "http://loans-service:3003"
+  LOG_LEVEL: "warn"
+  PORT: "8080"
+  REVIEWS_SERVICE_URL: "http://reviews-service:3004"
+
+---
+# Source: api-gateway/templates/resources.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-canary-test
+  labels:
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: "gateway"
+data:
+  canary.js: |
+    import http from "k6/http";
+    import { check, sleep } from "k6";
+
+    http.setResponseCallback(http.expectedStatuses(200, 401));
+    export const options = {
+      vus: 5,
+      duration: "20s",
+      thresholds: {
+        http_req_failed: ["rate<0.01"],
+        http_req_duration: ["p(95)<750"],
+        checks: ["rate>0.99"]
+      }
+    };
+
+    const targets = [
+      { path: "/live", status: 200 },
+      { path: "/ready", status: 200 },
+      { path: "/health", status: 200 },
+      { path: "/openapi.json", status: 200 },
+      { path: "/api/auth/session", status: 401 },
+    ];
+
+    export default function () {
+      for (const target of targets) {
+        const response = http.get(`${__ENV.BASE_URL}${target.path}`, {
+          timeout: "3s",
+          tags: { endpoint: target.path }
+        });
+        check(response, {
+          [`${target.path} devuelve ${target.status}`]: (result) => result.status === target.status
+        });
+      }
+      sleep(0.2);
+    }
+
+---
+# Source: api-gateway/templates/resources.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  labels:
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: "gateway"
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+
+---
+# Source: api-gateway/templates/resources.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway-stable
+  labels:
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: "gateway"
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+
+---
+# Source: api-gateway/templates/resources.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway-canary
+  labels:
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: "gateway"
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+
+---
+# Source: api-gateway/templates/resources.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-gateway
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: "gateway"
+spec:
+  scaleTargetRef:
+    apiVersion: argoproj.io/v1alpha1
+    kind: Rollout
+    name: api-gateway
+  minReplicas: 2
+  maxReplicas: 3
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 180
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+---
+# Source: api-gateway/templates/resources.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-gateway
+  labels:
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: "gateway"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 1m
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8080
+
+
+---
+# Source: api-gateway/templates/resources.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: api-gateway-quality-gate
+  labels:
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: "gateway"
+spec:
+  metrics:
+    - name: canary-check
+      failureLimit: 0
+      # kind: Job; Argo Rollouts materializa este proveedor en cada paso canary.
+      provider:
+        job:
+          spec:
+            backoffLimit: 0
+            activeDeadlineSeconds: 120
+            ttlSecondsAfterFinished: 600
+            template:
+              metadata:
+                labels:
+                  app.kubernetes.io/part-of: sa-platform
+                  sa-platform.io/component: canary-analysis
+              spec:
+                restartPolicy: Never
+                automountServiceAccountToken: false
+                securityContext:
+                  runAsNonRoot: true
+                  seccompProfile:
+                    type: RuntimeDefault
+                containers:
+                  - name: k6
+                    image: "grafana/k6:0.57.0"
+                    imagePullPolicy: IfNotPresent
+                    args: ["run", "--quiet", "/scripts/canary.js"]
+                    env:
+                      - name: BASE_URL
+                        value: "http://api-gateway-canary:8080"
+                    securityContext:
+                      runAsNonRoot: true
+                      runAsUser: 12345
+                      runAsGroup: 12345
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: true
+                      capabilities:
+                        drop: ["ALL"]
+                    resources:
+                      requests:
+                        cpu: 50m
+                        memory: 64Mi
+                      limits:
+                        cpu: 250m
+                        memory: 256Mi
+                    volumeMounts:
+                      - name: scripts
+                        mountPath: /scripts
+                        readOnly: true
+                      - name: tmp
+                        mountPath: /tmp
+                volumes:
+                  - name: scripts
+                    configMap:
+                      name: api-gateway-canary-test
+                  - name: tmp
+                    emptyDir:
+                      sizeLimit: 32Mi
+
+---
+# Source: api-gateway/templates/resources.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: api-gateway
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  labels:
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: "gateway"
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  progressDeadlineSeconds: 600
+  progressDeadlineAbort: true
+  minReadySeconds: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api-gateway
+      app.kubernetes.io/instance: api-gateway
+  strategy:
+    canary:
+      stableService: api-gateway-stable
+      canaryService: api-gateway-canary
+      maxSurge: 1
+      maxUnavailable: 0
+      abortScaleDownDelaySeconds: 30
+      steps:
+        - setWeight: 20
+        - analysis:
+            templates:
+              - templateName: api-gateway-quality-gate
+        - setWeight: 50
+        - analysis:
+            templates:
+              - templateName: api-gateway-quality-gate
+        - setWeight: 80
+        - analysis:
+            templates:
+              - templateName: api-gateway-quality-gate
+  template:
+    metadata:
+      annotations:
+        checksum/config: "ea4e1fb81a2c67ec1ee1a67ee0e20821a978b0ba2c14ce053db8d9de214f2ea4"
+      labels:
+        app.kubernetes.io/name: api-gateway
+        app.kubernetes.io/instance: api-gateway
+        app.kubernetes.io/part-of: sa-platform
+        sa-platform.io/component: "gateway"
+        sa-platform.io/database-access: "false"
+        sa-platform.io/broker-access: "false"
+    spec:
+      serviceAccountName: api-gateway
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: api-gateway
+                    app.kubernetes.io/instance: api-gateway
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api-gateway
+          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/api-gateway:v8.0.9"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: api-gateway-config
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            limits:
+              cpu: 600m
+              memory: 512Mi
+            requests:
+              cpu: 150m
+              memory: 192Mi
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi

@@ -1,0 +1,1646 @@
+# Generado desde P8/charts/runtime-infrastructure para P9. No editar manualmente.
+---
+# Source: runtime-infrastructure/charts/postgresql/templates/primary/networkpolicy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: sa-postgresql
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 18.4.0
+    helm.sh/chart: postgresql-18.8.0
+    app.kubernetes.io/component: primary
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: runtime-infrastructure
+      app.kubernetes.io/name: postgresql
+      app.kubernetes.io/component: primary
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - {}
+  ingress:
+    - ports:
+        - port: 5432
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/controller-poddisruptionbudget.yaml
+# PDB is not supported for DaemonSets.
+# https://github.com/kubernetes/kubernetes/issues/108124
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: controller
+  name: runtime-infrastructure-ingress-nginx-controller
+  namespace: sa-p9
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ingress-nginx
+      app.kubernetes.io/instance: runtime-infrastructure
+      app.kubernetes.io/component: controller
+  minAvailable: 1
+
+---
+# Source: runtime-infrastructure/charts/postgresql/templates/primary/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sa-postgresql
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 18.4.0
+    helm.sh/chart: postgresql-18.8.0
+    app.kubernetes.io/component: primary
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: runtime-infrastructure
+      app.kubernetes.io/name: postgresql
+      app.kubernetes.io/component: primary
+
+---
+# Source: runtime-infrastructure/charts/rabbitmq/templates/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sa-rabbitmq
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/version: 4.1.3
+    helm.sh/chart: rabbitmq-16.0.14
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: runtime-infrastructure
+      app.kubernetes.io/name: rabbitmq
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/controller-serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: controller
+  name: runtime-infrastructure-ingress-nginx
+  namespace: sa-p9
+automountServiceAccountToken: true
+
+---
+# Source: runtime-infrastructure/charts/postgresql/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-postgresql
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 18.4.0
+    helm.sh/chart: postgresql-18.8.0
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+automountServiceAccountToken: false
+
+---
+# Source: runtime-infrastructure/charts/rabbitmq/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-rabbitmq
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/version: 4.1.3
+    helm.sh/chart: rabbitmq-16.0.14
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+automountServiceAccountToken: false
+secrets:
+  - name: sa-platform-infra-credentials
+
+
+---
+# Source: runtime-infrastructure/charts/rabbitmq/templates/config-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sa-rabbitmq-config
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/version: 4.1.3
+    helm.sh/chart: rabbitmq-16.0.14
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+type: Opaque
+data:
+  rabbitmq.conf: |-
+    IyMgVXNlcm5hbWUgYW5kIHBhc3N3b3JkCmRlZmF1bHRfdXNlciA9IHNhX3BsYXRmb3JtCgojIHF1ZXVlIGxlYWRlciBsb2NhdG9yCnF1ZXVlX2xlYWRlcl9sb2NhdG9yID0gYmFsYW5jZWQKIyBlbmFibGUgbG9vcGJhY2sgdXNlcgpsb29wYmFja191c2Vycy5zYV9wbGF0Zm9ybSA9IGZhbHNlCiNkZWZhdWx0X3Zob3N0ID0gc2EtcDktdmhvc3QKI2Rpc2tfZnJlZV9saW1pdC5hYnNvbHV0ZSA9IDUwTUIKIyMgUHJvbWV0aGV1cyBtZXRyaWNzCiMjCnByb21ldGhldXMudGNwLnBvcnQgPSA5NDE5CiMjIFRDUCBMaXN0ZW4gT3B0aW9ucwojIwp0Y3BfbGlzdGVuX29wdGlvbnMuYmFja2xvZyA9IDEyOAp0Y3BfbGlzdGVuX29wdGlvbnMubm9kZWxheSA9IHRydWUKdGNwX2xpc3Rlbl9vcHRpb25zLmxpbmdlci5vbiAgICAgID0gdHJ1ZQp0Y3BfbGlzdGVuX29wdGlvbnMubGluZ2VyLnRpbWVvdXQgPSAwCnRjcF9saXN0ZW5fb3B0aW9ucy5rZWVwYWxpdmUgPSBmYWxzZQ==
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/controller-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: controller
+  name: runtime-infrastructure-ingress-nginx-controller
+  namespace: sa-p9
+data:
+
+---
+# Source: runtime-infrastructure/charts/postgresql/templates/primary/initialization-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sa-postgresql-init-scripts
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 18.4.0
+    helm.sh/chart: postgresql-18.8.0
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+data:
+  00-create-databases.sql: |
+    SELECT 'CREATE DATABASE books_db OWNER sa_platform'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'books_db')\gexec
+    SELECT 'CREATE DATABASE loans_db OWNER sa_platform'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'loans_db')\gexec
+    SELECT 'CREATE DATABASE reviews_db OWNER sa_platform'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'reviews_db')\gexec
+    SELECT 'CREATE DATABASE operations_db OWNER sa_platform'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'operations_db')\gexec
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+  name: runtime-infrastructure-ingress-nginx
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - endpoints
+      - nodes
+      - pods
+      - secrets
+      - namespaces
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses/status
+    verbs:
+      - update
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingressclasses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - list
+      - watch
+      - get
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+  name: runtime-infrastructure-ingress-nginx
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: runtime-infrastructure-ingress-nginx
+subjects:
+  - kind: ServiceAccount
+    name: runtime-infrastructure-ingress-nginx
+    namespace: sa-p9
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/controller-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: controller
+  name: runtime-infrastructure-ingress-nginx
+  namespace: sa-p9
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - pods
+      - secrets
+      - endpoints
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  # Omit Ingress status permissions if `--update-status` is disabled.
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses/status
+    verbs:
+      - update
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingressclasses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    resourceNames:
+      - runtime-infrastructure-ingress-nginx-leader
+    verbs:
+      - get
+      - update
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - create
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - list
+      - watch
+      - get
+
+---
+# Source: runtime-infrastructure/charts/rabbitmq/templates/role.yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: sa-rabbitmq-endpoint-reader
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/version: 4.1.3
+    helm.sh/chart: rabbitmq-16.0.14
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create"]
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/controller-rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: controller
+  name: runtime-infrastructure-ingress-nginx
+  namespace: sa-p9
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: runtime-infrastructure-ingress-nginx
+subjects:
+  - kind: ServiceAccount
+    name: runtime-infrastructure-ingress-nginx
+    namespace: sa-p9
+
+---
+# Source: runtime-infrastructure/charts/rabbitmq/templates/rolebinding.yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: sa-rabbitmq-endpoint-reader
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/version: 4.1.3
+    helm.sh/chart: rabbitmq-16.0.14
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+subjects:
+  - kind: ServiceAccount
+    name: sa-rabbitmq
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: sa-rabbitmq-endpoint-reader
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/controller-service-webhook.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: controller
+  name: runtime-infrastructure-ingress-nginx-controller-admission
+  namespace: sa-p9
+spec:
+  type: ClusterIP
+  ports:
+    - name: https-webhook
+      port: 443
+      targetPort: webhook
+      appProtocol: https
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/component: controller
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/controller-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: controller
+  name: runtime-infrastructure-ingress-nginx-controller
+  namespace: sa-p9
+spec:
+  type: LoadBalancer
+  loadBalancerClass: networking.gke.io/l4-regional-external
+  externalTrafficPolicy: Local
+  ipFamilyPolicy: SingleStack
+  ipFamilies: 
+    - IPv4
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
+      appProtocol: http
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: https
+      appProtocol: https
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/component: controller
+
+---
+# Source: runtime-infrastructure/charts/postgresql/templates/primary/svc-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: sa-postgresql-hl
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 18.4.0
+    helm.sh/chart: postgresql-18.8.0
+    app.kubernetes.io/component: primary
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  # We want all pods in the StatefulSet to have their addresses published for
+  # the sake of the other Postgresql pods even before they're ready, since they
+  # have to be able to talk to each other in order to become ready.
+  publishNotReadyAddresses: true
+  ports:
+    - name: tcp-postgresql
+      port: 5432
+      targetPort: tcp-postgresql
+  selector:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/component: primary
+
+---
+# Source: runtime-infrastructure/charts/postgresql/templates/primary/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: sa-postgresql
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 18.4.0
+    helm.sh/chart: postgresql-18.8.0
+    app.kubernetes.io/component: primary
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  type: ClusterIP
+  ports:
+    - name: tcp-postgresql
+      port: 5432
+      targetPort: tcp-postgresql
+      nodePort: null
+  selector:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/component: primary
+
+---
+# Source: runtime-infrastructure/charts/rabbitmq/templates/svc-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: sa-rabbitmq-headless
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/version: 4.1.3
+    helm.sh/chart: rabbitmq-16.0.14
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  clusterIP: None
+  ports:
+    - name: epmd
+      port: 4369
+      targetPort: epmd
+    - name: amqp
+      port: 5672
+      targetPort: amqp
+    - name: dist
+      port: 25672
+      targetPort: dist
+    - name: http-stats
+      port: 15672
+      targetPort: stats
+  selector:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/name: rabbitmq
+  publishNotReadyAddresses: true
+  trafficDistribution: PreferClose
+
+---
+# Source: runtime-infrastructure/charts/rabbitmq/templates/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: sa-rabbitmq
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/version: 4.1.3
+    helm.sh/chart: rabbitmq-16.0.14
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  type: ClusterIP
+  sessionAffinity: None
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: amqp
+      nodePort: null
+    - name: epmd
+      port: 4369
+      targetPort: epmd
+      nodePort: null
+    - name: dist
+      port: 25672
+      targetPort: dist
+      nodePort: null
+    - name: http-stats
+      port: 15672
+      targetPort: stats
+      nodePort: null
+  selector:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/name: rabbitmq
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/controller-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: controller
+  name: runtime-infrastructure-ingress-nginx-controller
+  namespace: sa-p9
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ingress-nginx
+      app.kubernetes.io/instance: runtime-infrastructure
+      app.kubernetes.io/component: controller
+  replicas: 2
+  revisionHistoryLimit: 10
+  minReadySeconds: 0
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: ingress-nginx-4.15.1
+        app.kubernetes.io/name: ingress-nginx
+        app.kubernetes.io/instance: runtime-infrastructure
+        app.kubernetes.io/version: "1.15.1"
+        app.kubernetes.io/part-of: ingress-nginx
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: controller
+        sa-platform.io/component: ingress-controller
+    spec:
+      dnsPolicy: ClusterFirst
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: controller
+          image: registry.k8s.io/ingress-nginx/controller:v1.15.1@sha256:594ceea76b01c592858f803f9ff4d2cb40542cae2060410b2c95f75907d659e1
+          imagePullPolicy: IfNotPresent
+          lifecycle: 
+            preStop:
+              exec:
+                command:
+                - /wait-shutdown
+          args: 
+            - /nginx-ingress-controller
+            - --publish-service=$(POD_NAMESPACE)/runtime-infrastructure-ingress-nginx-controller
+            - --election-id=runtime-infrastructure-ingress-nginx-leader
+            - --controller-class=k8s.io/ingress-nginx
+            - --ingress-class=nginx
+            - --configmap=$(POD_NAMESPACE)/runtime-infrastructure-ingress-nginx-controller
+            - --validating-webhook=:8443
+            - --validating-webhook-certificate=/usr/local/certificates/cert
+            - --validating-webhook-key=/usr/local/certificates/key
+          securityContext: 
+            runAsNonRoot: true
+            runAsUser: 101
+            runAsGroup: 82
+            allowPrivilegeEscalation: false
+            seccompProfile: 
+              type: RuntimeDefault
+            capabilities:
+              drop:
+              - ALL
+              add:
+              - NET_BIND_SERVICE
+            readOnlyRootFilesystem: false
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: LD_PRELOAD
+              value: /usr/local/lib/libmimalloc.so
+          livenessProbe: 
+            failureThreshold: 5
+            httpGet:
+              path: /healthz
+              port: 10254
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe: 
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 10254
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+            - name: https
+              containerPort: 443
+              protocol: TCP
+            - name: webhook
+              containerPort: 8443
+              protocol: TCP
+          volumeMounts:
+            - name: webhook-cert
+              mountPath: /usr/local/certificates/
+              readOnly: true
+          resources: 
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      nodeSelector: 
+        kubernetes.io/os: linux
+      affinity: 
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: controller
+                  app.kubernetes.io/name: ingress-nginx
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      serviceAccountName: runtime-infrastructure-ingress-nginx
+      automountServiceAccountToken: true
+      terminationGracePeriodSeconds: 300
+      volumes:
+        - name: webhook-cert
+          secret:
+            secretName: runtime-infrastructure-ingress-nginx-admission
+
+---
+# Source: runtime-infrastructure/charts/postgresql/templates/primary/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sa-postgresql
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/version: 18.4.0
+    helm.sh/chart: postgresql-18.8.0
+    app.kubernetes.io/component: primary
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  replicas: 1
+  serviceName: sa-postgresql-hl
+  updateStrategy:
+    rollingUpdate: {}
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: runtime-infrastructure
+      app.kubernetes.io/name: postgresql
+      app.kubernetes.io/component: primary
+  template:
+    metadata:
+      name: sa-postgresql
+      labels:
+        app.kubernetes.io/instance: runtime-infrastructure
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: postgresql
+        app.kubernetes.io/version: 18.4.0
+        helm.sh/chart: postgresql-18.8.0
+        sa-platform.io/component: database
+        app.kubernetes.io/component: primary
+      annotations:
+        backup.velero.io/backup-volumes: data
+    spec:
+      serviceAccountName: sa-postgresql
+      
+      automountServiceAccountToken: false
+      affinity:
+        podAffinity:
+          
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/instance: runtime-infrastructure
+                    app.kubernetes.io/name: postgresql
+                    app.kubernetes.io/component: primary
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+          
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: Always
+        supplementalGroups: []
+        sysctls: []
+      hostNetwork: false
+      hostIPC: false
+      containers:
+        - name: postgresql
+          image: docker.io/bitnamilegacy/postgresql:17.6.0-debian-12-r2
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seLinuxOptions: {}
+            seccompProfile:
+              type: RuntimeDefault
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: POSTGRESQL_PORT_NUMBER
+              value: "5432"
+            - name: POSTGRESQL_VOLUME_DIR
+              value: "/bitnami/postgresql"
+            - name: OPENSSL_FIPS
+              value: "yes"
+            - name: OPENSSL_FIPS_PROVIDER_PATH
+              value: "/etc/ssl/provider_fips.cnf"
+            - name: PGDATA
+              value: "/bitnami/postgresql/data"
+            # Authentication
+            - name: POSTGRES_USER
+              value: "sa_platform"
+            - name: POSTGRES_PASSWORD_FILE
+              value: /opt/bitnami/postgresql/secrets/password
+            - name: POSTGRES_POSTGRES_PASSWORD_FILE
+              value: /opt/bitnami/postgresql/secrets/postgres-password
+            - name: POSTGRES_DATABASE
+              value: "auth_db"
+            # LDAP
+            - name: POSTGRESQL_ENABLE_LDAP
+              value: "no"
+            # TLS
+            - name: POSTGRESQL_ENABLE_TLS
+              value: "no"
+            # Audit
+            - name: POSTGRESQL_LOG_HOSTNAME
+              value: "false"
+            - name: POSTGRESQL_LOG_CONNECTIONS
+              value: "false"
+            - name: POSTGRESQL_LOG_DISCONNECTIONS
+              value: "false"
+            - name: POSTGRESQL_PGAUDIT_LOG_CATALOG
+              value: "off"
+            # Others
+            - name: POSTGRESQL_CLIENT_MIN_MESSAGES
+              value: "error"
+            - name: POSTGRESQL_SHARED_PRELOAD_LIBRARIES
+              value: "pgaudit"
+          ports:
+            - name: tcp-postgresql
+              containerPort: 5432
+          livenessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - |
+                  exec pg_isready -U "sa_platform" -d "dbname=auth_db" -h 127.0.0.1 -p 5432
+          readinessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - |
+                  exec pg_isready -U "sa_platform" -d "dbname=auth_db" -h 127.0.0.1 -p 5432
+                  [ -f /opt/bitnami/postgresql/tmp/.initialized ] || [ -f /bitnami/postgresql/.initialized ]
+          resources:
+            limits:
+              cpu: 750m
+              memory: 768Mi
+            requests:
+              cpu: 150m
+              memory: 256Mi
+          volumeMounts:
+            - name: empty-dir
+              mountPath: /tmp
+              subPath: tmp-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/postgresql/conf
+              subPath: app-conf-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/postgresql/tmp
+              subPath: app-tmp-dir
+            - name: custom-init-scripts
+              mountPath: /docker-entrypoint-initdb.d/
+            - name: postgresql-password
+              mountPath: /opt/bitnami/postgresql/secrets/
+            - name: dshm
+              mountPath: /dev/shm
+            - name: data
+              mountPath: /bitnami/postgresql
+      volumes:
+        - name: empty-dir
+          emptyDir: {}
+        - name: postgresql-password
+          secret:
+            secretName: sa-platform-infra-credentials
+        - name: custom-init-scripts
+          configMap:
+            name: sa-postgresql-init-scripts
+        - name: dshm
+          emptyDir:
+            medium: Memory
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "4Gi"
+        storageClassName: standard-rwo
+
+---
+# Source: runtime-infrastructure/charts/rabbitmq/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sa-rabbitmq
+  namespace: "sa-p9"
+  labels:
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/version: 4.1.3
+    helm.sh/chart: rabbitmq-16.0.14
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  serviceName: sa-rabbitmq-headless
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: runtime-infrastructure
+      app.kubernetes.io/name: rabbitmq
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: runtime-infrastructure
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: rabbitmq
+        app.kubernetes.io/version: 4.1.3
+        helm.sh/chart: rabbitmq-16.0.14
+        sa-platform.io/component: broker
+      annotations:
+        argocd.argoproj.io/sync-wave: "1"
+        checksum/config: afb9db9788b1d62e89dea912895782d83ef2b472db6ea31836b2504c4bd76b05
+        backup.velero.io/backup-volumes: data
+    spec:
+      
+      serviceAccountName: sa-rabbitmq
+      affinity:
+        podAffinity:
+          
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/instance: runtime-infrastructure
+                    app.kubernetes.io/name: rabbitmq
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+          
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: Always
+        supplementalGroups: []
+        sysctls: []
+      terminationGracePeriodSeconds: 120
+      enableServiceLinks: true
+      initContainers:
+        - name: prepare-plugins-dir
+          image: docker.io/bitnamilegacy/rabbitmq:4.1.3-debian-12-r1
+          imagePullPolicy: "IfNotPresent"
+          resources:
+            limits:
+              cpu: 750m
+              memory: 768Mi
+            requests:
+              cpu: 150m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seLinuxOptions: {}
+            seccompProfile:
+              type: RuntimeDefault
+          command:
+            - /bin/bash
+          args:
+            - -ec
+            - |
+              #!/bin/bash
+
+              . /opt/bitnami/scripts/liblog.sh
+
+              info "Copying plugins dir to empty dir"
+              # In order to not break the possibility of installing custom plugins, we need
+              # to make the plugins directory writable, so we need to copy it to an empty dir volume
+              cp -r --preserve=mode /opt/bitnami/rabbitmq/plugins/ /emptydir/app-plugins-dir
+          volumeMounts:
+            - name: empty-dir
+              mountPath: /emptydir
+      containers:
+        - name: rabbitmq
+          image: docker.io/bitnamilegacy/rabbitmq:4.1.3-debian-12-r1
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seLinuxOptions: {}
+            seccompProfile:
+              type: RuntimeDefault
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/bash
+                  - -ec
+                  - |
+                    if [[ -f /opt/bitnami/scripts/rabbitmq/nodeshutdown.sh ]]; then
+                        /opt/bitnami/scripts/rabbitmq/nodeshutdown.sh -t "120" -d "false"
+                    else
+                        rabbitmqctl stop_app
+                    fi
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: RABBITMQ_FORCE_BOOT
+              value: "no"
+            - name: RABBITMQ_NODE_NAME
+              value: "rabbit@$(MY_POD_NAME).sa-rabbitmq-headless.$(MY_POD_NAMESPACE).svc.cluster.local"
+            - name: RABBITMQ_UPDATE_PASSWORD
+              value: "no"
+            - name: RABBITMQ_MNESIA_DIR
+              value: "/opt/bitnami/rabbitmq/.rabbitmq/mnesia/$(RABBITMQ_NODE_NAME)"
+            - name: RABBITMQ_LDAP_ENABLE
+              value: "no"
+            - name: RABBITMQ_LOGS
+              value: "-"
+            - name: RABBITMQ_ULIMIT_NOFILES
+              value: "65535"
+            - name: RABBITMQ_USE_LONGNAME
+              value: "true"
+            - name: RABBITMQ_ERL_COOKIE_FILE
+              value: /opt/bitnami/rabbitmq/secrets/rabbitmq-erlang-cookie
+            - name: RABBITMQ_LOAD_DEFINITIONS
+              value: "no"
+            - name: RABBITMQ_DEFINITIONS_FILE
+              value: "/app/load_definition.json"
+            - name: RABBITMQ_SECURE_PASSWORD
+              value: "yes"
+            - name: RABBITMQ_USERNAME
+              value: "sa_platform"
+            - name: RABBITMQ_PASSWORD_FILE
+              value: /opt/bitnami/rabbitmq/secrets/rabbitmq-password
+            - name: RABBITMQ_PLUGINS
+              value: "rabbitmq_management, rabbitmq_peer_discovery_k8s, rabbitmq_auth_backend_ldap"
+          envFrom:
+          ports:
+            - name: amqp
+              containerPort: 5672
+            - name: dist
+              containerPort: 25672
+            - name: stats
+              containerPort: 15672
+            - name: epmd
+              containerPort: 4369
+            - name: metrics
+              containerPort: 9419
+          livenessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 20
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - curl -f --user sa_platform:$(< $RABBITMQ_PASSWORD_FILE) 127.0.0.1:15672/api/health/checks/virtual-hosts
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 20
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - curl -f --user sa_platform:$(< $RABBITMQ_PASSWORD_FILE) 127.0.0.1:15672/api/health/checks/local-alarms
+          resources:
+            limits:
+              cpu: 750m
+              memory: 768Mi
+            requests:
+              cpu: 150m
+              memory: 256Mi
+          volumeMounts:
+            - name: configuration
+              mountPath: /bitnami/rabbitmq/conf
+            - name: empty-dir
+              mountPath: /tmp
+              subPath: tmp-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/rabbitmq/etc/rabbitmq
+              subPath: app-conf-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/rabbitmq/var/lib/rabbitmq
+              subPath: app-tmp-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/rabbitmq/.rabbitmq/
+              subPath: app-erlang-cookie
+            - name: empty-dir
+              mountPath: /opt/bitnami/rabbitmq/var/log/rabbitmq
+              subPath: app-logs-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/rabbitmq/plugins
+              subPath: app-plugins-dir
+            - name: data
+              mountPath: /opt/bitnami/rabbitmq/.rabbitmq/mnesia
+            - name: rabbitmq-secrets
+              mountPath: /opt/bitnami/rabbitmq/secrets
+      volumes:
+        - name: empty-dir
+          emptyDir: {}
+        - name: configuration
+          projected:
+            sources:
+              - secret:
+                  name: sa-rabbitmq-config
+        - name: rabbitmq-secrets
+          projected:
+            sources:
+              - secret:
+                  name: sa-platform-infra-credentials
+              - secret:
+                  name: sa-platform-infra-credentials
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data
+        labels:
+          app.kubernetes.io/instance: runtime-infrastructure
+          app.kubernetes.io/name: rabbitmq
+      spec:
+        accessModes:
+            - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "2Gi"
+        storageClassName: standard-rwo
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/controller-ingressclass.yaml
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: controller
+  name: nginx
+spec:
+  controller: k8s.io/ingress-nginx
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/admission-webhooks/validating-webhook.yaml
+# before changing this value, check the required kubernetes version
+# https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#prerequisites
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  annotations:
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: admission-webhook
+  name: runtime-infrastructure-ingress-nginx-admission
+webhooks:
+  - name: validate.nginx.ingress.kubernetes.io
+    matchPolicy: Equivalent
+    rules:
+      - apiGroups:
+          - networking.k8s.io
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - ingresses
+    failurePolicy: Fail
+    sideEffects: None
+    admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: runtime-infrastructure-ingress-nginx-controller-admission
+        namespace: sa-p9
+        port: 443
+        path: /networking/v1/ingresses
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/admission-webhooks/job-patch/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: runtime-infrastructure-ingress-nginx-admission
+  namespace: sa-p9
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: admission-webhook
+automountServiceAccountToken: true
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/admission-webhooks/job-patch/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: runtime-infrastructure-ingress-nginx-admission
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: admission-webhook
+rules:
+  - apiGroups:
+      - admissionregistration.k8s.io
+    resources:
+      - validatingwebhookconfigurations
+    verbs:
+      - get
+      - update
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/admission-webhooks/job-patch/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: runtime-infrastructure-ingress-nginx-admission
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: admission-webhook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: runtime-infrastructure-ingress-nginx-admission
+subjects:
+  - kind: ServiceAccount
+    name: runtime-infrastructure-ingress-nginx-admission
+    namespace: sa-p9
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/admission-webhooks/job-patch/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: runtime-infrastructure-ingress-nginx-admission
+  namespace: sa-p9
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: admission-webhook
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - create
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/admission-webhooks/job-patch/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: runtime-infrastructure-ingress-nginx-admission
+  namespace: sa-p9
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: admission-webhook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: runtime-infrastructure-ingress-nginx-admission
+subjects:
+  - kind: ServiceAccount
+    name: runtime-infrastructure-ingress-nginx-admission
+    namespace: sa-p9
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/admission-webhooks/job-patch/job-createSecret.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: runtime-infrastructure-ingress-nginx-admission-create
+  namespace: sa-p9
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: admission-webhook
+spec:
+  ttlSecondsAfterFinished: 0
+  template:
+    metadata:
+      name: runtime-infrastructure-ingress-nginx-admission-create
+      labels:
+        helm.sh/chart: ingress-nginx-4.15.1
+        app.kubernetes.io/name: ingress-nginx
+        app.kubernetes.io/instance: runtime-infrastructure
+        app.kubernetes.io/version: "1.15.1"
+        app.kubernetes.io/part-of: ingress-nginx
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: admission-webhook
+    spec:
+      containers:
+        - name: create
+          image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.9@sha256:01038e7de14b78d702d2849c3aad72fd25903c4765af63cf16aa3398f5d5f2dd
+          imagePullPolicy: IfNotPresent
+          args:
+            - create
+            - --host=runtime-infrastructure-ingress-nginx-controller-admission,runtime-infrastructure-ingress-nginx-controller-admission.$(POD_NAMESPACE).svc
+            - --namespace=$(POD_NAMESPACE)
+            - --secret-name=runtime-infrastructure-ingress-nginx-admission
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          resources: 
+            limits:
+              cpu: 50m
+              memory: 64Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+      restartPolicy: OnFailure
+      serviceAccountName: runtime-infrastructure-ingress-nginx-admission
+      automountServiceAccountToken: true
+      nodeSelector: 
+        kubernetes.io/os: linux
+      securityContext: 
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+
+---
+# Source: runtime-infrastructure/charts/ingress-nginx/templates/admission-webhooks/job-patch/job-patchWebhook.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: runtime-infrastructure-ingress-nginx-admission-patch
+  namespace: sa-p9
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+  labels:
+    helm.sh/chart: ingress-nginx-4.15.1
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/instance: runtime-infrastructure
+    app.kubernetes.io/version: "1.15.1"
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: admission-webhook
+spec:
+  ttlSecondsAfterFinished: 0
+  template:
+    metadata:
+      name: runtime-infrastructure-ingress-nginx-admission-patch
+      labels:
+        helm.sh/chart: ingress-nginx-4.15.1
+        app.kubernetes.io/name: ingress-nginx
+        app.kubernetes.io/instance: runtime-infrastructure
+        app.kubernetes.io/version: "1.15.1"
+        app.kubernetes.io/part-of: ingress-nginx
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: admission-webhook
+    spec:
+      containers:
+        - name: patch
+          image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.9@sha256:01038e7de14b78d702d2849c3aad72fd25903c4765af63cf16aa3398f5d5f2dd
+          imagePullPolicy: IfNotPresent
+          args:
+            - patch
+            - --webhook-name=runtime-infrastructure-ingress-nginx-admission
+            - --namespace=$(POD_NAMESPACE)
+            - --patch-mutating=false
+            - --secret-name=runtime-infrastructure-ingress-nginx-admission
+            - --patch-failure-policy=Fail
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          resources: 
+            limits:
+              cpu: 50m
+              memory: 64Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+      restartPolicy: OnFailure
+      serviceAccountName: runtime-infrastructure-ingress-nginx-admission
+      automountServiceAccountToken: true
+      nodeSelector: 
+        kubernetes.io/os: linux
+      securityContext: 
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+
