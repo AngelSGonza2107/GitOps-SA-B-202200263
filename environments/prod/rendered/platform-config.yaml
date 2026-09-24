@@ -167,7 +167,7 @@ spec:
             seccompProfile: { type: RuntimeDefault }
           containers:
             - name: insert-execution
-              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v8.0.8-faulty.1"
+              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v8.0.9"
               imagePullPolicy: IfNotPresent
               command: ["python", "-m", "jobs.insert_execution"]
               envFrom:
@@ -229,7 +229,7 @@ spec:
             seccompProfile: { type: RuntimeDefault }
           containers:
             - name: publish-summary
-              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v8.0.8-faulty.1"
+              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v8.0.9"
               imagePullPolicy: IfNotPresent
               command: ["python", "-m", "jobs.publish_summary"]
               envFrom:
