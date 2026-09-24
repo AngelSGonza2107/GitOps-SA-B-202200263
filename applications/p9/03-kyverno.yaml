@@ -15,6 +15,11 @@ spec:
       values: |
         admissionController:
           replicas: 2
+          rbac:
+            serviceAccount:
+              annotations:
+                iam.gke.io/gcp-service-account: p9-kyverno-verifier@practicas-sa-2s2026.iam.gserviceaccount.com
+              automountServiceAccountToken: true
         backgroundController:
           replicas: 1
         cleanupController:
