@@ -11,4 +11,9 @@ ingress-nginx:
   enabled: true
   controller:
     watchNamespace: sa-p9
+    admissionWebhooks:
+      # Durante el primer sync el job post-install todavía no ha inyectado la
+      # CA. Ignore evita el bloqueo circular; después el webhook sigue
+      # validando normalmente con la CA instalada por kube-webhook-certgen.
+      failurePolicy: Ignore
 
