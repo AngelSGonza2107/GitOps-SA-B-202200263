@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sa-p9
+  labels:
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/environment: p9
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p9-resource-quota
+  namespace: sa-p9
+spec:
+  hard:
+    requests.cpu: "6"
+    requests.memory: 12Gi
+    limits.cpu: "20"
+    limits.memory: 16Gi
+    pods: "60"
+    persistentvolumeclaims: "6"
+    requests.storage: 20Gi
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: p9-default-limits
+  namespace: sa-p9
+spec:
+  limits:
+    - type: Container
+      defaultRequest: { cpu: 100m, memory: 128Mi }
+      default: { cpu: 600m, memory: 512Mi }
+

@@ -1,70 +1,73 @@
-# Generado desde P8/charts/reviews-service. No editar este archivo manualmente.
+# Generado desde P8/charts/api-gateway para P9. No editar manualmente.
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: api-gateway/templates/resources.yaml
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: reviews-service
+  name: api-gateway
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "gateway"
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: reviews-service
-      app.kubernetes.io/instance: reviews-service
-
+      app.kubernetes.io/name: api-gateway
+      app.kubernetes.io/instance: api-gateway
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: api-gateway/templates/resources.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: reviews-service
+  name: api-gateway
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "gateway"
 automountServiceAccountToken: false
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: api-gateway/templates/resources.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: reviews-service-config
+  name: api-gateway-config
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "gateway"
 data:
-  BOOKS_SERVICE_URL: "http://api-gateway:8080"
-  LOG_LEVEL: "WARNING"
+  AUTH_SERVICE_URL: "http://auth-service:3001"
+  BOOKS_SERVICE_URL: "http://books-service:3002"
+  LOANS_SERVICE_URL: "http://loans-service:3003"
+  LOG_LEVEL: "warn"
+  PORT: "8080"
+  REVIEWS_SERVICE_URL: "http://reviews-service:3004"
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: api-gateway/templates/resources.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: reviews-service-canary-test
+  name: api-gateway-canary-test
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "gateway"
 data:
   canary.js: |
     import http from "k6/http";
@@ -72,8 +75,8 @@ data:
 
     http.setResponseCallback(http.expectedStatuses(200, 401));
     export const options = {
-      vus: 3,
-      duration: "15s",
+      vus: 5,
+      duration: "20s",
       thresholds: {
         http_req_failed: ["rate<0.01"],
         http_req_duration: ["p(95)<750"],
@@ -85,6 +88,8 @@ data:
       { path: "/live", status: 200 },
       { path: "/ready", status: 200 },
       { path: "/health", status: 200 },
+      { path: "/openapi.json", status: 200 },
+      { path: "/api/auth/session", status: 401 },
     ];
 
     export default function () {
@@ -101,90 +106,152 @@ data:
     }
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: api-gateway/templates/resources.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: reviews-service
+  name: api-gateway
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "gateway"
 spec:
   type: ClusterIP
   ports:
     - name: http
-      port: 3004
+      port: 8080
       targetPort: http
       protocol: TCP
   selector:
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: api-gateway/templates/resources.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: reviews-service-stable
+  name: api-gateway-stable
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "gateway"
 spec:
   type: ClusterIP
   ports:
     - name: http
-      port: 3004
+      port: 8080
       targetPort: http
       protocol: TCP
   selector:
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: api-gateway/templates/resources.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: reviews-service-canary
+  name: api-gateway-canary
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "gateway"
 spec:
   type: ClusterIP
   ports:
     - name: http
-      port: 3004
+      port: 8080
       targetPort: http
       protocol: TCP
   selector:
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: api-gateway/templates/resources.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-gateway
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: "gateway"
+spec:
+  scaleTargetRef:
+    apiVersion: argoproj.io/v1alpha1
+    kind: Rollout
+    name: api-gateway
+  minReplicas: 2
+  maxReplicas: 3
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 180
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+---
+# Source: api-gateway/templates/resources.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-gateway
+  labels:
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: sa-platform
+    sa-platform.io/component: "gateway"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 1m
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8080
+
+
+---
+# Source: api-gateway/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: reviews-service-quality-gate
+  name: api-gateway-quality-gate
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "gateway"
 spec:
   metrics:
     - name: canary-check
@@ -215,7 +282,7 @@ spec:
                     args: ["run", "--quiet", "/scripts/canary.js"]
                     env:
                       - name: BASE_URL
-                        value: "http://reviews-service-canary:3004"
+                        value: "http://api-gateway-canary:8080"
                     securityContext:
                       runAsNonRoot: true
                       runAsUser: 12345
@@ -240,26 +307,26 @@ spec:
                 volumes:
                   - name: scripts
                     configMap:
-                      name: reviews-service-canary-test
+                      name: api-gateway-canary-test
                   - name: tmp
                     emptyDir:
                       sizeLimit: 32Mi
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: api-gateway/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: reviews-service
+  name: api-gateway
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "3"
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: api-gateway-2.0.0
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/instance: api-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "gateway"
 spec:
   replicas: 2
   revisionHistoryLimit: 3
@@ -268,12 +335,12 @@ spec:
   minReadySeconds: 5
   selector:
     matchLabels:
-      app.kubernetes.io/name: reviews-service
-      app.kubernetes.io/instance: reviews-service
+      app.kubernetes.io/name: api-gateway
+      app.kubernetes.io/instance: api-gateway
   strategy:
     canary:
-      stableService: reviews-service-stable
-      canaryService: reviews-service-canary
+      stableService: api-gateway-stable
+      canaryService: api-gateway-canary
       maxSurge: 1
       maxUnavailable: 0
       abortScaleDownDelaySeconds: 30
@@ -281,51 +348,59 @@ spec:
         - setWeight: 20
         - analysis:
             templates:
-              - templateName: reviews-service-quality-gate
+              - templateName: api-gateway-quality-gate
         - setWeight: 50
         - analysis:
             templates:
-              - templateName: reviews-service-quality-gate
+              - templateName: api-gateway-quality-gate
         - setWeight: 80
         - analysis:
             templates:
-              - templateName: reviews-service-quality-gate
+              - templateName: api-gateway-quality-gate
   template:
     metadata:
       annotations:
-        checksum/config: "8c3b767fa00e7e61bce0cbfffe10346430c09373d10a045575fbf6424baea77b"
+        checksum/config: "ea4e1fb81a2c67ec1ee1a67ee0e20821a978b0ba2c14ce053db8d9de214f2ea4"
       labels:
-        app.kubernetes.io/name: reviews-service
-        app.kubernetes.io/instance: reviews-service
+        app.kubernetes.io/name: api-gateway
+        app.kubernetes.io/instance: api-gateway
         app.kubernetes.io/part-of: sa-platform
-        sa-platform.io/component: "reviews"
-        sa-platform.io/database-access: "true"
+        sa-platform.io/component: "gateway"
+        sa-platform.io/database-access: "false"
         sa-platform.io/broker-access: "false"
     spec:
-      serviceAccountName: reviews-service
+      serviceAccountName: api-gateway
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 30
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: api-gateway
+                    app.kubernetes.io/instance: api-gateway
       securityContext:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: reviews-service
-          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/reviews-service:v8.0.8-faulty.1"
+        - name: api-gateway
+          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/api-gateway:v8.0.9"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 3004
+              containerPort: 8080
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: reviews-service-config
-            - secretRef:
-                name: sa-reviews-credentials
+                name: api-gateway-config
           securityContext:
             runAsNonRoot: true
-            runAsUser: 10001
-            runAsGroup: 10001
+            runAsUser: 1000
+            runAsGroup: 1000
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
@@ -335,7 +410,7 @@ spec:
               cpu: 600m
               memory: 512Mi
             requests:
-              cpu: 125m
+              cpu: 150m
               memory: 192Mi
           livenessProbe:
             httpGet:

@@ -1,4 +1,4 @@
-# Generado desde P8/charts/loans-consumer. No editar este archivo manualmente.
+# Generado desde P8/charts/loans-consumer para P9. No editar manualmente.
 ---
 # Source: loans-consumer/templates/resources.yaml
 apiVersion: policy/v1
@@ -72,13 +72,22 @@ spec:
       serviceAccountName: loans-consumer
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 30
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: loans-consumer
       securityContext:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: loans-consumer
-          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/loans-service:v8.0.8-faulty.1"
+          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/loans-service:v8.0.9"
           imagePullPolicy: IfNotPresent
           command: ["python", "-m", "app.consumer"]
           envFrom:

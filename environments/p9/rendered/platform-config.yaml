@@ -1,11 +1,11 @@
-# Generado desde P8/charts/platform-config. No editar este archivo manualmente.
+# Generado desde P8/charts/platform-config para P9. No editar manualmente.
 ---
 # Source: platform-config/templates/network-policies.yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: gateway-ingress-authorized
-  namespace: sa-p8-prod
+  namespace: sa-p9
   labels:
     app.kubernetes.io/part-of: sa-platform
 spec:
@@ -32,7 +32,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: services-ingress-from-gateway
-  namespace: sa-p8-prod
+  namespace: sa-p9
   labels:
     app.kubernetes.io/part-of: sa-platform
 spec:
@@ -59,7 +59,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-canary-analysis-ingress
-  namespace: sa-p8-prod
+  namespace: sa-p9
   labels:
     app.kubernetes.io/part-of: sa-platform
 spec:
@@ -87,7 +87,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-canary-analysis-egress
-  namespace: sa-p8-prod
+  namespace: sa-p9
   labels:
     app.kubernetes.io/part-of: sa-platform
 spec:
@@ -122,7 +122,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: sa-cronjobs-config
-  namespace: sa-p8-prod
+  namespace: sa-p9
   labels:
     app.kubernetes.io/part-of: sa-platform
 data:
@@ -137,7 +137,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: insert-execution
-  namespace: sa-p8-prod
+  namespace: sa-p9
   annotations:
     argocd.argoproj.io/sync-wave: "2"
   labels:
@@ -167,7 +167,7 @@ spec:
             seccompProfile: { type: RuntimeDefault }
           containers:
             - name: insert-execution
-              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v8.0.8-faulty.1"
+              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v8.0.9"
               imagePullPolicy: IfNotPresent
               command: ["python", "-m", "jobs.insert_execution"]
               envFrom:
@@ -199,7 +199,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: publish-summary
-  namespace: sa-p8-prod
+  namespace: sa-p9
   annotations:
     argocd.argoproj.io/sync-wave: "2"
   labels:
@@ -229,7 +229,7 @@ spec:
             seccompProfile: { type: RuntimeDefault }
           containers:
             - name: publish-summary
-              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v8.0.8-faulty.1"
+              image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/jobs:v8.0.9"
               imagePullPolicy: IfNotPresent
               command: ["python", "-m", "jobs.publish_summary"]
               envFrom:
@@ -274,8 +274,7 @@ spec:
           - resources:
               kinds: [Pod]
               namespaces:
-                - sa-p8-dev
-                - sa-p8-prod
+                - sa-p9
       validate:
         message: Las imágenes no pueden utilizar la etiqueta latest.
         pattern:
@@ -306,8 +305,7 @@ spec:
           - resources:
               kinds: [Pod]
               namespaces:
-                - sa-p8-dev
-                - sa-p8-prod
+                - sa-p9
       validate:
         message: Cada contenedor debe declarar límites de CPU y memoria.
         foreach:
@@ -337,8 +335,7 @@ spec:
           - resources:
               kinds: [Pod]
               namespaces:
-                - sa-p8-dev
-                - sa-p8-prod
+                - sa-p9
       validate:
         message: Los pods deben ejecutarse sin root y sin escalamiento de privilegios.
         pattern:
@@ -374,8 +371,7 @@ spec:
           - resources:
               kinds: [Pod]
               namespaces:
-                - sa-p8-dev
-                - sa-p8-prod
+                - sa-p9
       verifyImages:
         - imageReferences:
             - "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/*"
@@ -398,7 +394,7 @@ spec:
 apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:
-  name: p8-gcp-secret-manager
+  name: p9-gcp-secret-manager
   labels:
     app.kubernetes.io/part-of: sa-platform
   annotations:
@@ -410,7 +406,7 @@ spec:
       auth:
         workloadIdentity:
           clusterLocation: "us-central1-a"
-          clusterName: "sa-p8-gitops"
+          clusterName: "sa-p9-dr"
           serviceAccountRef:
             name: external-secrets
             namespace: external-secrets
@@ -421,23 +417,23 @@ apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: sa-platform-infra-credentials
-  namespace: sa-p8-prod
+  namespace: sa-p9
   labels:
     app.kubernetes.io/part-of: sa-platform
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  refreshInterval: 1h
+  refreshInterval: 15m
   secretStoreRef:
     kind: ClusterSecretStore
-    name: p8-gcp-secret-manager
+    name: p9-gcp-secret-manager
   target:
     name: sa-platform-infra-credentials
     creationPolicy: Owner
     deletionPolicy: Retain
   dataFrom:
     - extract:
-        key: p8-infra-credentials-prod
+        key: p9-infra-credentials-prod
 
 ---
 # Source: platform-config/templates/external-secrets.yaml
@@ -445,23 +441,23 @@ apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: sa-auth-credentials
-  namespace: sa-p8-prod
+  namespace: sa-p9
   labels:
     app.kubernetes.io/part-of: sa-platform
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  refreshInterval: 1h
+  refreshInterval: 15m
   secretStoreRef:
     kind: ClusterSecretStore
-    name: p8-gcp-secret-manager
+    name: p9-gcp-secret-manager
   target:
     name: sa-auth-credentials
     creationPolicy: Owner
     deletionPolicy: Retain
   dataFrom:
     - extract:
-        key: p8-auth-credentials-prod
+        key: p9-auth-credentials-prod
 
 ---
 # Source: platform-config/templates/external-secrets.yaml
@@ -469,23 +465,23 @@ apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: sa-books-credentials
-  namespace: sa-p8-prod
+  namespace: sa-p9
   labels:
     app.kubernetes.io/part-of: sa-platform
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  refreshInterval: 1h
+  refreshInterval: 15m
   secretStoreRef:
     kind: ClusterSecretStore
-    name: p8-gcp-secret-manager
+    name: p9-gcp-secret-manager
   target:
     name: sa-books-credentials
     creationPolicy: Owner
     deletionPolicy: Retain
   dataFrom:
     - extract:
-        key: p8-books-credentials-prod
+        key: p9-books-credentials-prod
 
 ---
 # Source: platform-config/templates/external-secrets.yaml
@@ -493,23 +489,23 @@ apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: sa-loans-credentials
-  namespace: sa-p8-prod
+  namespace: sa-p9
   labels:
     app.kubernetes.io/part-of: sa-platform
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  refreshInterval: 1h
+  refreshInterval: 15m
   secretStoreRef:
     kind: ClusterSecretStore
-    name: p8-gcp-secret-manager
+    name: p9-gcp-secret-manager
   target:
     name: sa-loans-credentials
     creationPolicy: Owner
     deletionPolicy: Retain
   dataFrom:
     - extract:
-        key: p8-loans-credentials-prod
+        key: p9-loans-credentials-prod
 
 ---
 # Source: platform-config/templates/external-secrets.yaml
@@ -517,23 +513,23 @@ apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: sa-reviews-credentials
-  namespace: sa-p8-prod
+  namespace: sa-p9
   labels:
     app.kubernetes.io/part-of: sa-platform
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  refreshInterval: 1h
+  refreshInterval: 15m
   secretStoreRef:
     kind: ClusterSecretStore
-    name: p8-gcp-secret-manager
+    name: p9-gcp-secret-manager
   target:
     name: sa-reviews-credentials
     creationPolicy: Owner
     deletionPolicy: Retain
   dataFrom:
     - extract:
-        key: p8-reviews-credentials-prod
+        key: p9-reviews-credentials-prod
 
 ---
 # Source: platform-config/templates/external-secrets.yaml
@@ -541,23 +537,23 @@ apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: sa-cron-insert-credentials
-  namespace: sa-p8-prod
+  namespace: sa-p9
   labels:
     app.kubernetes.io/part-of: sa-platform
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  refreshInterval: 1h
+  refreshInterval: 15m
   secretStoreRef:
     kind: ClusterSecretStore
-    name: p8-gcp-secret-manager
+    name: p9-gcp-secret-manager
   target:
     name: sa-cron-insert-credentials
     creationPolicy: Owner
     deletionPolicy: Retain
   dataFrom:
     - extract:
-        key: p8-cron-insert-credentials-prod
+        key: p9-cron-insert-credentials-prod
 
 ---
 # Source: platform-config/templates/external-secrets.yaml
@@ -565,20 +561,20 @@ apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: sa-cron-summary-credentials
-  namespace: sa-p8-prod
+  namespace: sa-p9
   labels:
     app.kubernetes.io/part-of: sa-platform
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  refreshInterval: 1h
+  refreshInterval: 15m
   secretStoreRef:
     kind: ClusterSecretStore
-    name: p8-gcp-secret-manager
+    name: p9-gcp-secret-manager
   target:
     name: sa-cron-summary-credentials
     creationPolicy: Owner
     deletionPolicy: Retain
   dataFrom:
     - extract:
-        key: p8-cron-summary-credentials-prod
+        key: p9-cron-summary-credentials-prod

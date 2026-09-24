@@ -1,70 +1,72 @@
-# Generado desde P8/charts/reviews-service. No editar este archivo manualmente.
+# Generado desde P8/charts/loans-service para P9. No editar manualmente.
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: loans-service/templates/resources.yaml
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: reviews-service
+  name: loans-service
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: loans-service-2.0.0
+    app.kubernetes.io/name: loans-service
+    app.kubernetes.io/instance: loans-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "loans"
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: reviews-service
-      app.kubernetes.io/instance: reviews-service
+      app.kubernetes.io/name: loans-service
+      app.kubernetes.io/instance: loans-service
 
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: loans-service/templates/resources.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: reviews-service
+  name: loans-service
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: loans-service-2.0.0
+    app.kubernetes.io/name: loans-service
+    app.kubernetes.io/instance: loans-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "loans"
 automountServiceAccountToken: false
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: loans-service/templates/resources.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: reviews-service-config
+  name: loans-service-config
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: loans-service-2.0.0
+    app.kubernetes.io/name: loans-service
+    app.kubernetes.io/instance: loans-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "loans"
 data:
   BOOKS_SERVICE_URL: "http://api-gateway:8080"
+  CRON_SUMMARY_QUEUE: "cron.summaries"
+  LOAN_REQUEST_QUEUE: "loan.requests"
   LOG_LEVEL: "WARNING"
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: loans-service/templates/resources.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: reviews-service-canary-test
+  name: loans-service-canary-test
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: loans-service-2.0.0
+    app.kubernetes.io/name: loans-service
+    app.kubernetes.io/instance: loans-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "loans"
 data:
   canary.js: |
     import http from "k6/http";
@@ -101,90 +103,90 @@ data:
     }
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: loans-service/templates/resources.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: reviews-service
+  name: loans-service
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: loans-service-2.0.0
+    app.kubernetes.io/name: loans-service
+    app.kubernetes.io/instance: loans-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "loans"
 spec:
   type: ClusterIP
   ports:
     - name: http
-      port: 3004
+      port: 3003
       targetPort: http
       protocol: TCP
   selector:
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    app.kubernetes.io/name: loans-service
+    app.kubernetes.io/instance: loans-service
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: loans-service/templates/resources.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: reviews-service-stable
+  name: loans-service-stable
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: loans-service-2.0.0
+    app.kubernetes.io/name: loans-service
+    app.kubernetes.io/instance: loans-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "loans"
 spec:
   type: ClusterIP
   ports:
     - name: http
-      port: 3004
+      port: 3003
       targetPort: http
       protocol: TCP
   selector:
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    app.kubernetes.io/name: loans-service
+    app.kubernetes.io/instance: loans-service
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: loans-service/templates/resources.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: reviews-service-canary
+  name: loans-service-canary
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: loans-service-2.0.0
+    app.kubernetes.io/name: loans-service
+    app.kubernetes.io/instance: loans-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "loans"
 spec:
   type: ClusterIP
   ports:
     - name: http
-      port: 3004
+      port: 3003
       targetPort: http
       protocol: TCP
   selector:
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    app.kubernetes.io/name: loans-service
+    app.kubernetes.io/instance: loans-service
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: loans-service/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: reviews-service-quality-gate
+  name: loans-service-quality-gate
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: loans-service-2.0.0
+    app.kubernetes.io/name: loans-service
+    app.kubernetes.io/instance: loans-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "loans"
 spec:
   metrics:
     - name: canary-check
@@ -215,7 +217,7 @@ spec:
                     args: ["run", "--quiet", "/scripts/canary.js"]
                     env:
                       - name: BASE_URL
-                        value: "http://reviews-service-canary:3004"
+                        value: "http://loans-service-canary:3003"
                     securityContext:
                       runAsNonRoot: true
                       runAsUser: 12345
@@ -240,26 +242,26 @@ spec:
                 volumes:
                   - name: scripts
                     configMap:
-                      name: reviews-service-canary-test
+                      name: loans-service-canary-test
                   - name: tmp
                     emptyDir:
                       sizeLimit: 32Mi
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: loans-service/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: reviews-service
+  name: loans-service
   annotations:
     argocd.argoproj.io/sync-wave: "2"
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: loans-service-2.0.0
+    app.kubernetes.io/name: loans-service
+    app.kubernetes.io/instance: loans-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "loans"
 spec:
   replicas: 2
   revisionHistoryLimit: 3
@@ -268,12 +270,12 @@ spec:
   minReadySeconds: 5
   selector:
     matchLabels:
-      app.kubernetes.io/name: reviews-service
-      app.kubernetes.io/instance: reviews-service
+      app.kubernetes.io/name: loans-service
+      app.kubernetes.io/instance: loans-service
   strategy:
     canary:
-      stableService: reviews-service-stable
-      canaryService: reviews-service-canary
+      stableService: loans-service-stable
+      canaryService: loans-service-canary
       maxSurge: 1
       maxUnavailable: 0
       abortScaleDownDelaySeconds: 30
@@ -281,47 +283,57 @@ spec:
         - setWeight: 20
         - analysis:
             templates:
-              - templateName: reviews-service-quality-gate
+              - templateName: loans-service-quality-gate
         - setWeight: 50
         - analysis:
             templates:
-              - templateName: reviews-service-quality-gate
+              - templateName: loans-service-quality-gate
         - setWeight: 80
         - analysis:
             templates:
-              - templateName: reviews-service-quality-gate
+              - templateName: loans-service-quality-gate
   template:
     metadata:
       annotations:
-        checksum/config: "8c3b767fa00e7e61bce0cbfffe10346430c09373d10a045575fbf6424baea77b"
+        checksum/config: "3d8e1e6f6c6c92c116dfbf137652c41611c305f8bcfda38902f278caec656f19"
       labels:
-        app.kubernetes.io/name: reviews-service
-        app.kubernetes.io/instance: reviews-service
+        app.kubernetes.io/name: loans-service
+        app.kubernetes.io/instance: loans-service
         app.kubernetes.io/part-of: sa-platform
-        sa-platform.io/component: "reviews"
+        sa-platform.io/component: "loans"
         sa-platform.io/database-access: "true"
-        sa-platform.io/broker-access: "false"
+        sa-platform.io/broker-access: "true"
     spec:
-      serviceAccountName: reviews-service
+      serviceAccountName: loans-service
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 30
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: loans-service
+                    app.kubernetes.io/instance: loans-service
       securityContext:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: reviews-service
-          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/reviews-service:v8.0.8-faulty.1"
+        - name: loans-service
+          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/loans-service:v8.0.9"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 3004
+              containerPort: 3003
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: reviews-service-config
+                name: loans-service-config
             - secretRef:
-                name: sa-reviews-credentials
+                name: sa-loans-credentials
           securityContext:
             runAsNonRoot: true
             runAsUser: 10001

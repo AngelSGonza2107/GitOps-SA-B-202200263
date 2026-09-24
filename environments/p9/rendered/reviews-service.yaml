@@ -1,4 +1,4 @@
-# Generado desde P8/charts/reviews-service. No editar este archivo manualmente.
+# Generado desde P8/charts/reviews-service para P9. No editar manualmente.
 ---
 # Source: reviews-service/templates/resources.yaml
 apiVersion: policy/v1
@@ -305,13 +305,23 @@ spec:
       serviceAccountName: reviews-service
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 30
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: reviews-service
+                    app.kubernetes.io/instance: reviews-service
       securityContext:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: reviews-service
-          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/reviews-service:v8.0.8-faulty.1"
+          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/reviews-service:v8.0.9"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

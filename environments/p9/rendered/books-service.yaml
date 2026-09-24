@@ -1,70 +1,70 @@
-# Generado desde P8/charts/reviews-service. No editar este archivo manualmente.
+# Generado desde P8/charts/books-service para P9. No editar manualmente.
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: books-service/templates/resources.yaml
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: reviews-service
+  name: books-service
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: books-service-2.0.0
+    app.kubernetes.io/name: books-service
+    app.kubernetes.io/instance: books-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "books"
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: reviews-service
-      app.kubernetes.io/instance: reviews-service
+      app.kubernetes.io/name: books-service
+      app.kubernetes.io/instance: books-service
 
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: books-service/templates/resources.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: reviews-service
+  name: books-service
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: books-service-2.0.0
+    app.kubernetes.io/name: books-service
+    app.kubernetes.io/instance: books-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "books"
 automountServiceAccountToken: false
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: books-service/templates/resources.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: reviews-service-config
+  name: books-service-config
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: books-service-2.0.0
+    app.kubernetes.io/name: books-service
+    app.kubernetes.io/instance: books-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "books"
 data:
-  BOOKS_SERVICE_URL: "http://api-gateway:8080"
-  LOG_LEVEL: "WARNING"
+  LOG_LEVEL: "warn"
+  PORT: "3002"
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: books-service/templates/resources.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: reviews-service-canary-test
+  name: books-service-canary-test
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: books-service-2.0.0
+    app.kubernetes.io/name: books-service
+    app.kubernetes.io/instance: books-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "books"
 data:
   canary.js: |
     import http from "k6/http";
@@ -101,90 +101,90 @@ data:
     }
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: books-service/templates/resources.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: reviews-service
+  name: books-service
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: books-service-2.0.0
+    app.kubernetes.io/name: books-service
+    app.kubernetes.io/instance: books-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "books"
 spec:
   type: ClusterIP
   ports:
     - name: http
-      port: 3004
+      port: 3002
       targetPort: http
       protocol: TCP
   selector:
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    app.kubernetes.io/name: books-service
+    app.kubernetes.io/instance: books-service
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: books-service/templates/resources.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: reviews-service-stable
+  name: books-service-stable
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: books-service-2.0.0
+    app.kubernetes.io/name: books-service
+    app.kubernetes.io/instance: books-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "books"
 spec:
   type: ClusterIP
   ports:
     - name: http
-      port: 3004
+      port: 3002
       targetPort: http
       protocol: TCP
   selector:
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    app.kubernetes.io/name: books-service
+    app.kubernetes.io/instance: books-service
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: books-service/templates/resources.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: reviews-service-canary
+  name: books-service-canary
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: books-service-2.0.0
+    app.kubernetes.io/name: books-service
+    app.kubernetes.io/instance: books-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "books"
 spec:
   type: ClusterIP
   ports:
     - name: http
-      port: 3004
+      port: 3002
       targetPort: http
       protocol: TCP
   selector:
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    app.kubernetes.io/name: books-service
+    app.kubernetes.io/instance: books-service
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: books-service/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: reviews-service-quality-gate
+  name: books-service-quality-gate
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: books-service-2.0.0
+    app.kubernetes.io/name: books-service
+    app.kubernetes.io/instance: books-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "books"
 spec:
   metrics:
     - name: canary-check
@@ -215,7 +215,7 @@ spec:
                     args: ["run", "--quiet", "/scripts/canary.js"]
                     env:
                       - name: BASE_URL
-                        value: "http://reviews-service-canary:3004"
+                        value: "http://books-service-canary:3002"
                     securityContext:
                       runAsNonRoot: true
                       runAsUser: 12345
@@ -240,26 +240,26 @@ spec:
                 volumes:
                   - name: scripts
                     configMap:
-                      name: reviews-service-canary-test
+                      name: books-service-canary-test
                   - name: tmp
                     emptyDir:
                       sizeLimit: 32Mi
 
 ---
-# Source: reviews-service/templates/resources.yaml
+# Source: books-service/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: reviews-service
+  name: books-service
   annotations:
     argocd.argoproj.io/sync-wave: "2"
   labels:
-    helm.sh/chart: reviews-service-2.0.0
-    app.kubernetes.io/name: reviews-service
-    app.kubernetes.io/instance: reviews-service
+    helm.sh/chart: books-service-2.0.0
+    app.kubernetes.io/name: books-service
+    app.kubernetes.io/instance: books-service
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "reviews"
+    sa-platform.io/component: "books"
 spec:
   replicas: 2
   revisionHistoryLimit: 3
@@ -268,12 +268,12 @@ spec:
   minReadySeconds: 5
   selector:
     matchLabels:
-      app.kubernetes.io/name: reviews-service
-      app.kubernetes.io/instance: reviews-service
+      app.kubernetes.io/name: books-service
+      app.kubernetes.io/instance: books-service
   strategy:
     canary:
-      stableService: reviews-service-stable
-      canaryService: reviews-service-canary
+      stableService: books-service-stable
+      canaryService: books-service-canary
       maxSurge: 1
       maxUnavailable: 0
       abortScaleDownDelaySeconds: 30
@@ -281,51 +281,61 @@ spec:
         - setWeight: 20
         - analysis:
             templates:
-              - templateName: reviews-service-quality-gate
+              - templateName: books-service-quality-gate
         - setWeight: 50
         - analysis:
             templates:
-              - templateName: reviews-service-quality-gate
+              - templateName: books-service-quality-gate
         - setWeight: 80
         - analysis:
             templates:
-              - templateName: reviews-service-quality-gate
+              - templateName: books-service-quality-gate
   template:
     metadata:
       annotations:
-        checksum/config: "8c3b767fa00e7e61bce0cbfffe10346430c09373d10a045575fbf6424baea77b"
+        checksum/config: "50ac6752cbd30c88f489b74ec993e196c22b88685902a33334ade2ed0e01d55f"
       labels:
-        app.kubernetes.io/name: reviews-service
-        app.kubernetes.io/instance: reviews-service
+        app.kubernetes.io/name: books-service
+        app.kubernetes.io/instance: books-service
         app.kubernetes.io/part-of: sa-platform
-        sa-platform.io/component: "reviews"
+        sa-platform.io/component: "books"
         sa-platform.io/database-access: "true"
         sa-platform.io/broker-access: "false"
     spec:
-      serviceAccountName: reviews-service
+      serviceAccountName: books-service
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 30
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: books-service
+                    app.kubernetes.io/instance: books-service
       securityContext:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: reviews-service
-          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/reviews-service:v8.0.8-faulty.1"
+        - name: books-service
+          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/books-service:v8.0.9"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 3004
+              containerPort: 3002
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: reviews-service-config
+                name: books-service-config
             - secretRef:
-                name: sa-reviews-credentials
+                name: sa-books-credentials
           securityContext:
             runAsNonRoot: true
-            runAsUser: 10001
-            runAsGroup: 10001
+            runAsUser: 1000
+            runAsGroup: 1000
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
