@@ -378,7 +378,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: api-gateway
-          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/api-gateway:v9.0.0"
+          image: "us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/api-gateway:v9.0.1"
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
