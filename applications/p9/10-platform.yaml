@@ -5,6 +5,7 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
 spec:
   project: sa-p9
   source:
@@ -27,8 +28,12 @@ spec:
       prune: true
       selfHeal: true
       allowEmpty: false
-    syncOptions: [CreateNamespace=true, ServerSideApply=true, RespectIgnoreDifferences=true]
+    syncOptions:
+      [
+        CreateNamespace=true,
+        ServerSideApply=true,
+        RespectIgnoreDifferences=true,
+      ]
     retry:
       limit: 10
       backoff: { duration: 15s, factor: 2, maxDuration: 5m }
-
