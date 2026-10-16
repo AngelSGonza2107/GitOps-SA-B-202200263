@@ -1,3 +1,3 @@
 image:
   repository: us-central1-docker.pkg.dev/practicas-sa-2s2026/sa-platform-prod/reviews-service
-  tag: "v9.0.0"
+  tag: "v9.0.1"

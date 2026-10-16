@@ -1,0 +1,85 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: sa-p10-slo-and-budget-alerts
+  labels: {app.kubernetes.io/part-of: sa-observability}
+spec:
+  groups:
+    - name: sa-p10-slo-recording
+      interval: 15s
+      rules:
+        - record: slo:gateway_availability:ratio_rate30d
+          expr: |
+            1 - (
+              (sum(rate(sa_http_server_requests_total{service_name="api-gateway",http_route!~"/(live|ready|health)",http_response_status_code=~"5.."}[30d])) or vector(0))
+              /
+              clamp_min((sum(rate(sa_http_server_requests_total{service_name="api-gateway",http_route!~"/(live|ready|health)"}[30d])) or vector(0)), 0.000001)
+            )
+        - record: slo:gateway_availability:error_budget_consumed
+          expr: (1 - slo:gateway_availability:ratio_rate30d) / 0.01
+        - record: slo:gateway_latency:ratio_rate30d
+          expr: |
+            (sum(rate(sa_http_server_duration_seconds_bucket{service_name="api-gateway",http_route!~"/(live|ready|health)",le="0.5"}[30d])) or vector(0))
+            /
+            clamp_min((sum(rate(sa_http_server_duration_seconds_count{service_name="api-gateway",http_route!~"/(live|ready|health)"}[30d])) or vector(0)), 0.000001)
+        - record: slo:gateway_latency:error_budget_consumed
+          expr: (1 - slo:gateway_latency:ratio_rate30d) / 0.05
+        - record: slo:gateway_availability:error_ratio_rate5m
+          expr: |
+            (sum(rate(sa_http_server_requests_total{service_name="api-gateway",http_route!~"/(live|ready|health)",http_response_status_code=~"5.."}[5m])) or vector(0))
+            /
+            clamp_min((sum(rate(sa_http_server_requests_total{service_name="api-gateway",http_route!~"/(live|ready|health)"}[5m])) or vector(0)), 0.000001)
+        - record: slo:gateway_availability:error_ratio_rate1h
+          expr: |
+            (sum(rate(sa_http_server_requests_total{service_name="api-gateway",http_route!~"/(live|ready|health)",http_response_status_code=~"5.."}[1h])) or vector(0))
+            /
+            clamp_min((sum(rate(sa_http_server_requests_total{service_name="api-gateway",http_route!~"/(live|ready|health)"}[1h])) or vector(0)), 0.000001)
+        - record: slo:gateway_availability:error_ratio_rate30m
+          expr: |
+            (sum(rate(sa_http_server_requests_total{service_name="api-gateway",http_route!~"/(live|ready|health)",http_response_status_code=~"5.."}[30m])) or vector(0))
+            /
+            clamp_min((sum(rate(sa_http_server_requests_total{service_name="api-gateway",http_route!~"/(live|ready|health)"}[30m])) or vector(0)), 0.000001)
+        - record: slo:gateway_availability:error_ratio_rate6h
+          expr: |
+            (sum(rate(sa_http_server_requests_total{service_name="api-gateway",http_route!~"/(live|ready|health)",http_response_status_code=~"5.."}[6h])) or vector(0))
+            /
+            clamp_min((sum(rate(sa_http_server_requests_total{service_name="api-gateway",http_route!~"/(live|ready|health)"}[6h])) or vector(0)), 0.000001)
+        - record: slo:gateway_latency:bad_ratio_rate5m
+          expr: |
+            1 - (
+              (sum(rate(sa_http_server_duration_seconds_bucket{service_name="api-gateway",http_route!~"/(live|ready|health)",le="0.5"}[5m])) or vector(0))
+              /
+              clamp_min((sum(rate(sa_http_server_duration_seconds_count{service_name="api-gateway",http_route!~"/(live|ready|health)"}[5m])) or vector(0)), 0.000001)
+            )
+        - record: slo:gateway_latency:bad_ratio_rate1h
+          expr: |
+            1 - (
+              (sum(rate(sa_http_server_duration_seconds_bucket{service_name="api-gateway",http_route!~"/(live|ready|health)",le="0.5"}[1h])) or vector(0))
+              /
+              clamp_min((sum(rate(sa_http_server_duration_seconds_count{service_name="api-gateway",http_route!~"/(live|ready|health)"}[1h])) or vector(0)), 0.000001)
+            )
+    - name: sa-p10-budget-alerts
+      interval: 15s
+      rules:
+        - alert: GatewayAvailabilityBudgetBurnFast
+          expr: slo:gateway_availability:error_ratio_rate5m > (14.4 * 0.01) and slo:gateway_availability:error_ratio_rate1h > (14.4 * 0.01)
+          for: 1m
+          labels: {severity: critical, service: api-gateway, slo: availability}
+          annotations:
+            summary: El presupuesto de disponibilidad se consume 14.4 veces más rápido de lo permitido
+            runbook_url: https://github.com/AngelSGonza2107/Practicas-SA-B-202200263/blob/main/P10/runbooks/availability-budget-burn.md
+            dashboard_url: http://monitoring-grafana.observability.svc.cluster.local/d/sa-p10-golden-signals
+        - alert: GatewayAvailabilityBudgetBurnSlow
+          expr: slo:gateway_availability:error_ratio_rate30m > (6 * 0.01) and slo:gateway_availability:error_ratio_rate6h > (6 * 0.01)
+          for: 5m
+          labels: {severity: warning, service: api-gateway, slo: availability}
+          annotations:
+            summary: El presupuesto de disponibilidad mantiene un consumo elevado
+            runbook_url: https://github.com/AngelSGonza2107/Practicas-SA-B-202200263/blob/main/P10/runbooks/availability-budget-burn.md
+        - alert: GatewayLatencyBudgetBurnFast
+          expr: slo:gateway_latency:bad_ratio_rate5m > (14.4 * 0.05) and slo:gateway_latency:bad_ratio_rate1h > (14.4 * 0.05)
+          for: 1m
+          labels: {severity: critical, service: api-gateway, slo: latency}
+          annotations:
+            summary: El presupuesto de latencia se consume 14.4 veces más rápido de lo permitido
+            runbook_url: https://github.com/AngelSGonza2107/Practicas-SA-B-202200263/blob/main/P10/runbooks/latency-budget-burn.md
