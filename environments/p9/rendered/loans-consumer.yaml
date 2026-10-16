@@ -35,7 +35,7 @@ metadata:
     app.kubernetes.io/name: loans-consumer
     app.kubernetes.io/part-of: sa-platform
 data:
-  BOOKS_SERVICE_URL: "http://api-gateway:8080"
+  BOOKS_SERVICE_URL: "http://books-service:3002"
   CRON_SUMMARY_QUEUE: "cron.summaries"
   LOAN_REQUEST_QUEUE: "loan.requests"
   LOG_LEVEL: "WARNING"
@@ -61,7 +61,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: "2dab7f4d035c436d7d0d6ade1ea2c9aa1d125d9b1448962cc63446d983f39fa6"
+        checksum/config: "aa8d73b798bc6fbb79b22f03c71d5fffb0a58cb5dcded6ac27acf283f4772414"
       labels:
         app.kubernetes.io/name: loans-consumer
         app.kubernetes.io/part-of: sa-platform

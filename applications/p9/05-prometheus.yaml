@@ -1,0 +1,135 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sa-p10-prometheus
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  project: sa-p9
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 91.4.0
+    helm:
+      releaseName: monitoring
+      values: |
+        defaultRules:
+          create: false
+        kubeApiServer:
+          enabled: false
+        kubeControllerManager:
+          enabled: false
+        kubeEtcd:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kubeProxy:
+          enabled: false
+        coreDns:
+          enabled: false
+        prometheus-node-exporter:
+          resources:
+            requests: {cpu: 25m, memory: 32Mi}
+            limits: {cpu: 100m, memory: 96Mi}
+        kube-state-metrics:
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 200m, memory: 192Mi}
+        prometheusOperator:
+          resources:
+            requests: {cpu: 50m, memory: 96Mi}
+            limits: {cpu: 250m, memory: 256Mi}
+        prometheus:
+          prometheusSpec:
+            retention: 30d
+            retentionSize: 7GB
+            scrapeInterval: 15s
+            evaluationInterval: 15s
+            serviceMonitorSelectorNilUsesHelmValues: false
+            podMonitorSelectorNilUsesHelmValues: false
+            ruleSelectorNilUsesHelmValues: false
+            resources:
+              requests: {cpu: 250m, memory: 768Mi}
+              limits: {cpu: 1000m, memory: 1536Mi}
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  accessModes: [ReadWriteOnce]
+                  resources:
+                    requests:
+                      storage: 8Gi
+        alertmanager:
+          config:
+            global:
+              resolve_timeout: 2m
+            route:
+              receiver: "null"
+              group_by: [alertname, service]
+              group_wait: 15s
+              group_interval: 1m
+              repeat_interval: 4h
+            receivers:
+              - name: "null"
+          alertmanagerSpec:
+            resources:
+              requests: {cpu: 50m, memory: 96Mi}
+              limits: {cpu: 200m, memory: 256Mi}
+        grafana:
+          persistence:
+            enabled: true
+            size: 2Gi
+          resources:
+            requests: {cpu: 100m, memory: 192Mi}
+            limits: {cpu: 500m, memory: 512Mi}
+          sidecar:
+            dashboards:
+              enabled: true
+              label: grafana_dashboard
+              searchNamespace: observability
+          grafana.ini:
+            auth.anonymous:
+              enabled: true
+              org_role: Admin
+            auth:
+              disable_login_form: true
+            analytics:
+              reporting_enabled: false
+              check_for_updates: false
+          additionalDataSources:
+            - name: Loki
+              uid: loki
+              type: loki
+              access: proxy
+              url: http://loki.observability.svc.cluster.local:3100
+              jsonData:
+                derivedFields:
+                  - name: TraceID
+                    matcherRegex: '"trace_id":"([0-9a-f]{32})"'
+                    datasourceUid: tempo
+                    url: '${__value.raw}'
+            - name: Tempo
+              uid: tempo
+              type: tempo
+              access: proxy
+              url: http://tempo.observability.svc.cluster.local:3200
+              jsonData:
+                tracesToLogsV2:
+                  datasourceUid: loki
+                  spanStartTimeShift: -2m
+                  spanEndTimeShift: 2m
+                  filterByTraceID: true
+                  filterBySpanID: false
+                  customQuery: true
+                  query: '{service_name="${__span.tags["service.name"]}"} | json | trace_id="${__trace.traceId}"'
+                serviceMap:
+                  datasourceUid: prometheus
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated: {prune: true, selfHeal: true}
+    syncOptions: [CreateNamespace=true, ServerSideApply=true]
+    retry:
+      limit: 10
+      backoff: {duration: 15s, factor: 2, maxDuration: 5m}

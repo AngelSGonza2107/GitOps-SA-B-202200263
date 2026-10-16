@@ -1,0 +1,127 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sa-p10-golden-signals-dashboard
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/part-of: sa-observability
+data:
+  golden-signals.json: |
+    {
+      "annotations": {"list": []},
+      "editable": true,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "type": "row", "title": "SLO y tráfico: ¿la experiencia del usuario cumple lo prometido?", "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0}, "collapsed": false, "panels": []
+        },
+        {
+          "type": "stat", "title": "Disponibilidad (30 días)", "id": 1,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [{"refId": "A", "expr": "slo:gateway_availability:ratio_rate30d", "legendFormat": "disponibilidad"}],
+          "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0.95, "max": 1, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 0.99}]}}, "overrides": []},
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "area", "justifyMode": "auto"},
+          "gridPos": {"h": 6, "w": 6, "x": 0, "y": 1}
+        },
+        {
+          "type": "stat", "title": "Presupuesto de disponibilidad consumido", "id": 2,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [{"refId": "A", "expr": "slo:gateway_availability:error_budget_consumed", "legendFormat": "budget"}],
+          "fieldConfig": {"defaults": {"unit": "percentunit", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 0.5}, {"color": "red", "value": 1}]}}, "overrides": []},
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "area", "justifyMode": "auto"},
+          "gridPos": {"h": 6, "w": 6, "x": 6, "y": 1}
+        },
+        {
+          "type": "timeseries", "title": "Tráfico por servicio", "id": 3,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [{"refId": "A", "expr": "sum by (service_name) (rate(sa_http_server_requests_total{http_route!~\"/(live|ready|health)\"}[2m]))", "legendFormat": "{{service_name}}"}],
+          "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+          "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "gridPos": {"h": 6, "w": 12, "x": 12, "y": 1}
+        },
+        {
+          "type": "timeseries", "title": "Métricas de negocio: préstamos", "id": 4,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [
+            {"refId": "A", "expr": "sum(rate(library_loans_requested_total[5m]))", "legendFormat": "solicitados/s"},
+            {"refId": "B", "expr": "sum(rate(library_loans_approved_total[5m]))", "legendFormat": "aprobados/s"},
+            {"refId": "C", "expr": "sum(rate(library_loans_rejected_total[5m]))", "legendFormat": "rechazados/s"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "ops"}, "overrides": []},
+          "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "gridPos": {"h": 7, "w": 24, "x": 0, "y": 7}
+        },
+        {
+          "type": "row", "title": "Errores: ¿qué servicio y revisión están fallando?", "gridPos": {"h": 1, "w": 24, "x": 0, "y": 14}, "collapsed": false, "panels": []
+        },
+        {
+          "type": "timeseries", "title": "Tasa de errores HTTP", "id": 5,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [{"refId": "A", "expr": "100 * (sum by (service_name, rollout_hash) (rate(sa_http_server_requests_total{http_response_status_code=~\"5..\",http_route!~\"/(live|ready|health)\"}[2m])) or vector(0)) / clamp_min(sum by (service_name, rollout_hash) (rate(sa_http_server_requests_total{http_route!~\"/(live|ready|health)\"}[2m])), 0.001)", "legendFormat": "{{service_name}} / {{rollout_hash}}"}],
+          "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 5}]}}, "overrides": []},
+          "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "gridPos": {"h": 8, "w": 14, "x": 0, "y": 15}
+        },
+        {
+          "type": "logs", "title": "Errores correlacionados (clic en TraceID)", "id": 6,
+          "datasource": {"type": "loki", "uid": "loki"},
+          "targets": [{"refId": "A", "expr": "{service_name=~\"api-gateway|loans-service|books-service\"} | json | severity=~\"ERROR|error\"", "queryType": "range"}],
+          "options": {"showTime": true, "showLabels": false, "showCommonLabels": false, "wrapLogMessage": true, "prettifyLogMessage": true, "enableLogDetails": true, "sortOrder": "Descending", "dedupStrategy": "none"},
+          "gridPos": {"h": 8, "w": 10, "x": 14, "y": 15}
+        },
+        {
+          "type": "row", "title": "Latencia: ¿dónde se consume el tiempo?", "gridPos": {"h": 1, "w": 24, "x": 0, "y": 23}, "collapsed": false, "panels": []
+        },
+        {
+          "type": "timeseries", "title": "Percentiles de latencia por servicio", "id": 7,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [
+            {"refId": "A", "expr": "histogram_quantile(0.50, sum by (le, service_name) (rate(sa_http_server_duration_seconds_bucket{http_route!~\"/(live|ready|health)\"}[2m])))", "legendFormat": "p50 {{service_name}}"},
+            {"refId": "B", "expr": "histogram_quantile(0.95, sum by (le, service_name) (rate(sa_http_server_duration_seconds_bucket{http_route!~\"/(live|ready|health)\"}[2m])))", "legendFormat": "p95 {{service_name}}"},
+            {"refId": "C", "expr": "histogram_quantile(0.99, sum by (le, service_name) (rate(sa_http_server_duration_seconds_bucket{http_route!~\"/(live|ready|health)\"}[2m])))", "legendFormat": "p99 {{service_name}}"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "s", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 0.5}]}}, "overrides": []},
+          "options": {"legend": {"displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "gridPos": {"h": 8, "w": 18, "x": 0, "y": 24}
+        },
+        {
+          "type": "stat", "title": "Presupuesto de latencia consumido", "id": 8,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [{"refId": "A", "expr": "slo:gateway_latency:error_budget_consumed", "legendFormat": "budget"}],
+          "fieldConfig": {"defaults": {"unit": "percentunit", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 0.5}, {"color": "red", "value": 1}]}}, "overrides": []},
+          "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "area", "justifyMode": "auto"},
+          "gridPos": {"h": 8, "w": 6, "x": 18, "y": 24}
+        },
+        {
+          "type": "row", "title": "Saturación: ¿algún pod está cerca de su límite?", "gridPos": {"h": 1, "w": 24, "x": 0, "y": 32}, "collapsed": false, "panels": []
+        },
+        {
+          "type": "timeseries", "title": "CPU usada respecto a CPU solicitada", "id": 9,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [{"refId": "A", "expr": "100 * sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"sa-p9\",container!=\"\",image!=\"\"}[5m])) / clamp_min(sum by (pod) (kube_pod_container_resource_requests{namespace=\"sa-p9\",resource=\"cpu\"}), 0.001)", "legendFormat": "{{pod}}"}],
+          "fieldConfig": {"defaults": {"unit": "percent", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 80}, {"color": "red", "value": 100}]}}, "overrides": []},
+          "options": {"legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 33}
+        },
+        {
+          "type": "timeseries", "title": "Memoria usada respecto al límite", "id": 10,
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [{"refId": "A", "expr": "100 * sum by (pod) (container_memory_working_set_bytes{namespace=\"sa-p9\",container!=\"\",image!=\"\"}) / clamp_min(sum by (pod) (kube_pod_container_resource_limits{namespace=\"sa-p9\",resource=\"memory\"}), 1)", "legendFormat": "{{pod}}"}],
+          "fieldConfig": {"defaults": {"unit": "percent", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 75}, {"color": "red", "value": 90}]}}, "overrides": []},
+          "options": {"legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 33}
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 41,
+      "tags": ["p10", "golden-signals", "slo"],
+      "templating": {"list": []},
+      "time": {"from": "now-30m", "to": "now"},
+      "timezone": "browser",
+      "title": "P10 - Golden Signals y SLO",
+      "uid": "sa-p10-golden-signals",
+      "version": 1
+    }
+    
