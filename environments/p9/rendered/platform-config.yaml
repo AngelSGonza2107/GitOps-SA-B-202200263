@@ -52,6 +52,14 @@ spec:
         - { protocol: TCP, port: 3002 }
         - { protocol: TCP, port: 3003 }
         - { protocol: TCP, port: 3004 }
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: sa-platform.io/component
+                operator: In
+                values: [loans, loans-consumer, reviews]
+      ports:
+        - { protocol: TCP, port: 3002 }
 
 ---
 # Source: platform-config/templates/network-policies.yaml

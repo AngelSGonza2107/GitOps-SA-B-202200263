@@ -58,56 +58,6 @@ data:
 ---
 # Source: api-gateway/templates/resources.yaml
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: api-gateway-canary-test
-  labels:
-    helm.sh/chart: api-gateway-2.0.0
-    app.kubernetes.io/name: api-gateway
-    app.kubernetes.io/instance: api-gateway
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: sa-platform
-    sa-platform.io/component: "gateway"
-data:
-  canary.js: |
-    import http from "k6/http";
-    import { check, sleep } from "k6";
-
-    http.setResponseCallback(http.expectedStatuses(200, 401));
-    export const options = {
-      vus: 5,
-      duration: "20s",
-      thresholds: {
-        http_req_failed: ["rate<0.01"],
-        http_req_duration: ["p(95)<750"],
-        checks: ["rate>0.99"]
-      }
-    };
-
-    const targets = [
-      { path: "/live", status: 200 },
-      { path: "/ready", status: 200 },
-      { path: "/health", status: 200 },
-      { path: "/openapi.json", status: 200 },
-      { path: "/api/auth/session", status: 401 },
-    ];
-
-    export default function () {
-      for (const target of targets) {
-        const response = http.get(`${__ENV.BASE_URL}${target.path}`, {
-          timeout: "3s",
-          tags: { endpoint: target.path }
-        });
-        check(response, {
-          [`${target.path} devuelve ${target.status}`]: (result) => result.status === target.status
-        });
-      }
-      sleep(0.2);
-    }
-
----
-# Source: api-gateway/templates/resources.yaml
-apiVersion: v1
 kind: Service
 metadata:
   name: api-gateway
@@ -253,64 +203,57 @@ metadata:
     app.kubernetes.io/part-of: sa-platform
     sa-platform.io/component: "gateway"
 spec:
+  args:
+    - name: service-name
+    - name: candidate-hash
   metrics:
-    - name: canary-check
-      failureLimit: 0
-      # kind: Job; Argo Rollouts materializa este proveedor en cada paso canary.
+    - name: candidate-error-rate
+      initialDelay: 30s
+      interval: 20s
+      count: 3
+      failureLimit: 1
+      successCondition: "len(result) == 1 && !isNaN(result[0]) && result[0] <= 0.05"
       provider:
-        job:
-          spec:
-            backoffLimit: 0
-            activeDeadlineSeconds: 120
-            ttlSecondsAfterFinished: 600
-            template:
-              metadata:
-                labels:
-                  app.kubernetes.io/part-of: sa-platform
-                  sa-platform.io/component: canary-analysis
-              spec:
-                restartPolicy: Never
-                automountServiceAccountToken: false
-                securityContext:
-                  runAsNonRoot: true
-                  seccompProfile:
-                    type: RuntimeDefault
-                containers:
-                  - name: k6
-                    image: "grafana/k6:0.57.0"
-                    imagePullPolicy: IfNotPresent
-                    args: ["run", "--quiet", "/scripts/canary.js"]
-                    env:
-                      - name: BASE_URL
-                        value: "http://api-gateway-canary:8080"
-                    securityContext:
-                      runAsNonRoot: true
-                      runAsUser: 12345
-                      runAsGroup: 12345
-                      allowPrivilegeEscalation: false
-                      readOnlyRootFilesystem: true
-                      capabilities:
-                        drop: ["ALL"]
-                    resources:
-                      requests:
-                        cpu: 50m
-                        memory: 64Mi
-                      limits:
-                        cpu: 250m
-                        memory: 256Mi
-                    volumeMounts:
-                      - name: scripts
-                        mountPath: /scripts
-                        readOnly: true
-                      - name: tmp
-                        mountPath: /tmp
-                volumes:
-                  - name: scripts
-                    configMap:
-                      name: api-gateway-canary-test
-                  - name: tmp
-                    emptyDir:
-                      sizeLimit: 32Mi
+        prometheus:
+          address: "http://monitoring-kube-prometheus-prometheus.observability.svc.cluster.local:9090"
+          query: |
+            (
+              (sum(rate(sa_http_server_requests_total{
+                service_name="{{args.service-name}}",
+                rollout_hash="{{args.candidate-hash}}",
+                http_route!~"/(live|ready|health)",
+                http_response_status_code=~"5.."
+              }[1m])) or vector(0))
+              /
+              clamp_min(
+                (sum(rate(sa_http_server_requests_total{
+                  service_name="{{args.service-name}}",
+                  rollout_hash="{{args.candidate-hash}}",
+                  http_route!~"/(live|ready|health)"
+                }[1m])) or vector(0)),
+                0.001
+              )
+            )
+    - name: candidate-p95-latency
+      initialDelay: 30s
+      interval: 20s
+      count: 3
+      failureLimit: 1
+      successCondition: "len(result) == 1 && !isNaN(result[0]) && result[0] <= 0.75"
+      provider:
+        prometheus:
+          address: "http://monitoring-kube-prometheus-prometheus.observability.svc.cluster.local:9090"
+          query: |
+            histogram_quantile(
+              0.95,
+              sum by (le) (
+                rate(sa_http_server_duration_seconds_bucket{
+                  service_name="{{args.service-name}}",
+                  rollout_hash="{{args.candidate-hash}}",
+                  http_route!~"/(live|ready|health)"
+                }[1m])
+              )
+            )
 
 ---
 # Source: api-gateway/templates/resources.yaml
@@ -349,14 +292,32 @@ spec:
         - analysis:
             templates:
               - templateName: api-gateway-quality-gate
+            args:
+              - name: service-name
+                value: "api-gateway"
+              - name: candidate-hash
+                valueFrom:
+                  podTemplateHashValue: Latest
         - setWeight: 50
         - analysis:
             templates:
               - templateName: api-gateway-quality-gate
+            args:
+              - name: service-name
+                value: "api-gateway"
+              - name: candidate-hash
+                valueFrom:
+                  podTemplateHashValue: Latest
         - setWeight: 80
         - analysis:
             templates:
               - templateName: api-gateway-quality-gate
+            args:
+              - name: service-name
+                value: "api-gateway"
+              - name: candidate-hash
+                valueFrom:
+                  podTemplateHashValue: Latest
   template:
     metadata:
       annotations:
@@ -397,6 +358,35 @@ spec:
           envFrom:
             - configMapRef:
                 name: api-gateway-config
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: OTEL_SERVICE_NAME
+              value: "api-gateway"
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "deployment.environment.name=p9,service.version=v8.0.9,k8s.namespace.name=$(POD_NAMESPACE),k8s.pod.name=$(POD_NAME)"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector.observability.svc.cluster.local:4318"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_TRACES_EXPORTER
+              value: otlp
+            - name: OTEL_METRICS_EXPORTER
+              value: otlp
+            - name: OTEL_LOGS_EXPORTER
+              value: none
+            - name: OTEL_METRIC_EXPORT_INTERVAL
+              value: "10000"
+            - name: OTEL_PROPAGATORS
+              value: tracecontext,baggage
+            - name: OTEL_PYTHON_FASTAPI_EXCLUDED_URLS
+              value: ".*/live,.*/ready,.*/health"
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000
