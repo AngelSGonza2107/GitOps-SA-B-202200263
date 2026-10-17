@@ -19,7 +19,6 @@ spec:
       app.kubernetes.io/name: loans-service
       app.kubernetes.io/instance: loans-service
 
-
 ---
 # Source: loans-service/templates/resources.yaml
 apiVersion: v1
