@@ -284,7 +284,7 @@ spec:
               namespaces:
                 - sa-p9
       validate:
-        message: Las imágenes no pueden utilizar la etiqueta latest.
+        message: Las im├ígenes no pueden utilizar la etiqueta latest.
         pattern:
           spec:
             containers:
@@ -301,7 +301,7 @@ kind: ClusterPolicy
 metadata:
   name: p8-require-resource-limits
   annotations:
-    policies.kyverno.io/title: Exigir límites de CPU y memoria
+    policies.kyverno.io/title: Exigir l├¡mites de CPU y memoria
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   validationFailureAction: Enforce
@@ -315,7 +315,7 @@ spec:
               namespaces:
                 - sa-p9
       validate:
-        message: Cada contenedor debe declarar límites de CPU y memoria.
+        message: Cada contenedor debe declarar l├¡mites de CPU y memoria.
         foreach:
           - list: request.object.spec.containers
             pattern:
@@ -331,7 +331,7 @@ kind: ClusterPolicy
 metadata:
   name: p8-require-non-root
   annotations:
-    policies.kyverno.io/title: Exigir ejecución sin root
+    policies.kyverno.io/title: Exigir ejecuci├│n sin root
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   validationFailureAction: Enforce

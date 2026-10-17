@@ -23,6 +23,12 @@ spec:
       name: runtime-infrastructure-ingress-nginx-admission
       jqPathExpressions:
         - .webhooks[]?.clientConfig.caBundle
+    - group: ""
+      kind: Service
+      jqPathExpressions:
+        - >-
+          select(.metadata.name | test("-(stable|canary)$")) |
+          .spec.selector."rollouts-pod-template-hash"
   syncPolicy:
     automated:
       prune: true
