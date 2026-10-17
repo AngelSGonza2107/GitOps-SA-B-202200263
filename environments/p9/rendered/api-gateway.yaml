@@ -188,7 +188,6 @@ spec:
                 port:
                   number: 8080
 
-
 ---
 # Source: api-gateway/templates/resources.yaml
 apiVersion: argoproj.io/v1alpha1
